@@ -1,0 +1,19 @@
+MASTER MANUFACTURING & SUPPLY AGREEMENT
+Agreement No: MFG-2026-99482
+Effective Date: 12 April 2026
+
+1. PARTIES
+This Master Manufacturing Agreement ("Agreement") is made between Precision Tech Manufacturing Ltd. ("Manufacturer"), located at 88 Industrial Parkway, Sector 4, Pune, Maharashtra 411018, India (Contact: Suresh Patel, email: suresh.patel@precisiontech.example, Phone: +91 98230 41928, PAN: AAACP8834K, GSTIN: 27AAACP8834K1Z5), and Apex Electronics Corp. ("Client"), located at 500 Silicon Valley Way, San Jose, CA 95110, USA (Contact: Jennifer Miller, email: j.miller@apexelectronics.example, Phone: +1 (408) 555-0144).
+
+2. SCOPE OF MANUFACTURING & TOOLING
+Manufacturer agrees to build custom printed circuit board assemblies (PCBA) under Project Codename "Falcon-X5". Proprietary manufacturing tooling mold #TL-9021 and trade secret assembly formula "ThermalBond-V4" shall remain the sole intellectual property of Client.
+
+3. PRICING & PAYMENT TERMS
+The estimated Annual Purchase Commitment (ACV) is USD $1,450,000. Client shall pay per Purchase Order (e.g. PO-MFG-88102) within 45 days of invoice. Payments shall be wired to HSBC Bank India, Account No. 042-883920-001, IFSC Code HSBC0400002, SWIFT: HSBCINBB.
+
+4. QUALITY STANDARDS & WARRANTY
+Manufacturer guarantees compliance with ISO 9001 and IPC-A-610 Class 3 standards. Defect rates exceeding 0.05% trigger liquid damages equal to 120% of batch value.
+
+5. SIGNATURES & EXECUTIONS
+Manufacturer: /s/ Suresh Patel (Managing Director)
+Client: /s/ Jennifer Miller (VP Supply Chain Operations)

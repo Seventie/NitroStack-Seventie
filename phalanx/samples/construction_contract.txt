@@ -1,0 +1,19 @@
+ENGINEERING, PROCUREMENT AND CONSTRUCTION (EPC) CONTRACT
+Contract Ref: EPC-2026-BLD-77291
+Date: 20 May 2026
+
+1. PARTIES
+This EPC Contract is entered into between BuildCorp Infrastructure Solutions Inc. ("Contractor"), located at 1200 Industrial Blvd, Suite 400, Houston, TX 77002 (Contact: Michael Vance, Project Director, email: mvance@buildcorp.example, Phone: +1 713 555 0192, Tax ID: 74-9830219), and Horizon Commercial Developments LLC ("Owner"), located at 800 Metropolis Plaza, Austin, TX 78701 (Contact: Karen Davies, VP Real Estate, email: k.davies@horizondev.example, Phone: +1 512 555 0834).
+
+2. PROJECT SCOPE & LOCATION
+Contractor shall execute the engineering design and construction of "Project Codename: Solaris Heights Commercial Complex", located at 450 Innovation Parkway, Austin, TX 78758. Total Contract Price: $28,500,000 USD.
+
+3. PAYMENT MILESTONES & BANKING
+Payments linked to milestones (Foundation 15%, Structural Frame 35%, Envelope 25%, Substantial Completion 25%). Payment destination: Wells Fargo Bank, Account No. 99482019482, Routing No. 121000248. Purchase Order PO-EPC-2026-901.
+
+4. DISPUTE RESOLUTION & LAW
+Governed by the laws of the State of Texas. Disputes subject to binding arbitration under AAA Construction Industry Rules in Travis County, Texas.
+
+5. SIGNATURES
+Contractor: /s/ Michael Vance
+Owner: /s/ Karen Davies

@@ -1,0 +1,49 @@
+DETAILED FICTIONAL RESIDENTIAL LEASE AGREEMENT
+Disclaimer: All names, addresses, IDs, account numbers, signatures, emails, and phone numbers are fictional and created solely for testing OCR and PII redaction.
+Agreement No: LSG-2026-000847
+Execution Date: 15 July 2026
+LANDLORD
+Jonathan Michael Carter
+45 Maple Ridge Drive Apt 12B, Springfield, IL 62704
+Phone: +1 (217) 555-8147
+Email: jonathan.carter@propertymail.example
+Driver License: DL-IL-48291375
+Tax ID: 984-62-3715
+TENANT
+Emily Rose Thompson
+108 Willow Street Unit 6A, Chicago, IL 60614
+Phone: +1 (312) 555-9038
+Email: emily.thompson98@mail.example
+Passport: XA9274516
+Driver License: DL-IL-82917463
+PROPERTY
+Apartment 704, Oakwood Heights Apartments, 1550 Lincoln Avenue, Springfield, IL 62703.
+2 Bed, 2 Bath, Parking P2-074, Locker SL-118, 1145 sq ft.
+LEASE TERM
+01 Aug 2026 – 31 Jul 2027. Monthly Rent: $1,850. Security Deposit: $2,500. Due on the 1st of each month. Late fee: $50 + $10/day.
+BANK DETAILS
+First National Community Bank
+Routing: 071000013
+Account: 583921470118
+SWIFT: FNCBUS44
+EMERGENCY CONTACT
+Daniel Thompson
++1 (773) 555-4120
+daniel.t@example
+CLAUSES
+Tenant shall maintain renter's insurance ($100,000 minimum), pay electricity/gas/internet, report damage within 48 hours, avoid unauthorized subletting, commercial activity, illegal substances, and excessive noise. Landlord pays water, trash, and building maintenance. Renewal requires 60 days' written notice.
+DIGITAL PAYMENT
+Zelle: jonathan.carter@propertymail.example
+PayPal: jmcarter.rent@example
+Venmo: @Jonathan-Carter-47
+Reference: RENT-2026-AUG
+SIGNATURES
+/s/ Jonathan M. Carter
+/s/ Emily R. Thompson
+Item Qty Condition
+Refrigerator 1 Excellent
+Sofa 1 Good
+Dining Chairs 4 Good
+Queen Bed 1 Excellent
+Microwave 1 Excellent
+Washer 1 Good

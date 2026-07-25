@@ -1,4 +1,4 @@
-import { Module } from '@nitrostack/core';
+import { McpApp, Module } from '@nitrostack/core';
 import { IngestionModule } from './modules/ingestion/ingestion.module.js';
 import { RedactionModule } from './modules/redaction/redaction.module.js';
 import { GraphModule } from './modules/graph/graph.module.js';
@@ -13,3 +13,15 @@ import { ContractResources } from './resources/contract.resources.js';
   controllers: []
 })
 export class AppModule {}
+
+McpApp({
+  module: AppModule,
+  transport: {
+    type: 'http',
+    http: {
+      port: 3000,
+      host: '0.0.0.0'
+    }
+  }
+})(AppModule);
+

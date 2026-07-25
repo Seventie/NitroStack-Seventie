@@ -44,9 +44,11 @@ export class RedactionTools {
       text: z.string().describe('Full text of the document'),
       doctype: z
         .string()
-        .describe(
-          'User-selected contract type: saas_msa | enterprise_agreement | nda | dpa | general_contract'
-        ),
+        .describe('User-selected contract type. Call list_redaction_policies to get supported values.'),
+      metadata: z
+        .record(z.unknown())
+        .optional()
+        .describe('Optional document metadata (e.g., author, lastEditedBy) to strip/audit'),
       sessionId: z.string().optional().describe('Reuse an existing session id; omit to mint a new one')
     }),
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
@@ -54,8 +56,8 @@ export class RedactionTools {
   async redactDocument(input: any, ctx: ExecutionContext) {
     ctx.logger.info('Redacting document', { doctype: input.doctype });
 
-    const result = await this.redactionService.redact(input.text, input.doctype, input.sessionId);
-    const verification = this.redactionService.verify(result.redactedText);
+    const result = await this.redactionService.redact(input.text, input.doctype, input.sessionId, input.metadata);
+    const verification = this.redactionService.verify(result.redactedText, result.doctype);
 
     if (!verification.clean) {
       ctx.logger.warn('Residual PII detected after redaction', { leaks: verification.leaks });

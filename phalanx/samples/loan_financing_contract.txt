@@ -1,0 +1,20 @@
+SYNDICATED CREDIT & LOAN FINANCING AGREEMENT
+Facility Reference: LOAN-2026-FIN-00918
+Date of Execution: 01 June 2026
+
+1. BORROWER AND LENDER
+This Credit Facility Agreement is entered into by Horizon Energy Infrastructure Ltd. ("Borrower"), 120 Financial Tower, London EC2N 2DB, UK (Company No. 09842104, Tax ID: GB 984 210 441, Contact: David Sterling, CFO, email: d.sterling@horizonenergy.example, Tel: +44 20 7946 0882), and Barclays Corporate Bank PLC ("Lender & Administrative Agent"), 1 Churchill Place, London E14 5HP.
+
+2. CREDIT FACILITY & REPAYMENT
+Lender agrees to extend a term loan facility in the principal amount of $15,000,000 USD (Fifteen Million United States Dollars) at SOFR + 2.75% per annum. Repayments shall be made quarterly starting 01 September 2026.
+Wire instructions for drawdowns: Citibank N.A. London Branch, Account No. 8839201948, IBAN GB82CITI18204888392019, SWIFT: CITIGB2L.
+
+3. FINANCIAL COVENANTS & GUARANTORS
+Borrower shall maintain a Debt Service Coverage Ratio (DSCR) of not less than 1.25x and Total Debt to EBITDA ratio below 3.0x. Guarantor: Horizon Parent Holdings S.A., Luxembourg (Tax ID: LU29840192).
+
+4. NOTICES & JURISDICTION
+Governed by English Law under the jurisdiction of the High Court of Justice in London, UK. Security Officer: Richard Hayes (r.hayes@barclays.example).
+
+5. SIGNATURES
+Borrower: /s/ David Sterling (Chief Financial Officer)
+Lender: /s/ Richard Hayes (Head of Corporate Lending)

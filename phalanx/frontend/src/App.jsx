@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import UploadZone from './components/UploadZone';
 import PhaseStepper from './components/PhaseStepper';
+import RedactionPanel from './components/RedactionPanel';
 import RiskTable from './components/RiskTable';
 import { analyzeDocument } from './lib/mcp-client';
 
@@ -13,21 +14,17 @@ function App() {
   const handleUpload = async (uploadedFile, contractType) => {
     setFile(uploadedFile);
     setState('PROCESSING');
+    setCurrentPhase(0);
     
     try {
-      // Simulate phases for demo
-      const phases = [0, 1, 2, 3, 4];
-      for (const phase of phases) {
-        setCurrentPhase(phase);
-        await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5s per phase
-      }
-      
-      const data = await analyzeDocument(uploadedFile, contractType);
+      const data = await analyzeDocument(uploadedFile, contractType, (phaseIndex) => {
+        setCurrentPhase(phaseIndex);
+      });
       setResults(data);
       setState('RESULTS');
     } catch (error) {
       console.error('Analysis failed:', error);
-      alert('Analysis failed. Please try again.');
+      alert(`Analysis failed: ${error.message || error}`);
       setState('UPLOAD');
     }
   };
@@ -56,14 +53,23 @@ function App() {
 
         {state === 'RESULTS' && results && (
           <div className="results-container">
-            <div>
-              <h2 style={{ marginTop: 0 }}>Analysis Results: <span className="mono">{file?.name}</span></h2>
+            <div className="results-header">
+              <h2 style={{ marginTop: 0 }}>
+                Analysis Results: <span className="mono">{file?.name}</span>
+              </h2>
               <p style={{ color: 'var(--text-secondary)' }}>
-                Processed {results.metadata.pageCount} pages in {results.metadata.processingTime}
+                Processed {results.metadata.pageCount} page(s) | Status: Complete
               </p>
             </div>
             
-            <RiskTable findings={results.findings} />
+            {results.redaction && (
+              <RedactionPanel redactionData={results.redaction} fileName={file?.name} />
+            )}
+
+            <div className="findings-section">
+              <h3 style={{ marginBottom: '1rem' }}>Contract Risk Analysis</h3>
+              <RiskTable findings={results.findings} />
+            </div>
             
             <div className="action-buttons">
               <button className="primary" onClick={() => window.print()}>Export Report</button>

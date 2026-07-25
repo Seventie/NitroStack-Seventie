@@ -27,6 +27,56 @@ export const CONTRACT_TYPES = [
     hint: 'Scrubs data-subject categories, sub-processor names, and data-centre locations.'
   },
   {
+    value: 'service_agreement',
+    label: 'General Services Agreement',
+    hint: 'Services/SOW paperwork with commercial and contact details.'
+  },
+  {
+    value: 'rental_lease',
+    label: 'Rental / Lease Agreement',
+    hint: 'Lease terms with rent, deposit, and party-contact identifiers.'
+  },
+  {
+    value: 'construction_contract',
+    label: 'Construction / EPC Contract',
+    hint: 'Milestone-heavy contracts with project and payment identifiers.'
+  },
+  {
+    value: 'supply_purchase_agreement',
+    label: 'Supply / Purchase Agreement',
+    hint: 'Procurement contracts with PO, delivery, and warranty clauses.'
+  },
+  {
+    value: 'manufacturing_agreement',
+    label: 'Manufacturing Agreement',
+    hint: 'Manufacturing obligations with quality, tooling, and trade-secret risk.'
+  },
+  {
+    value: 'licensing_agreement',
+    label: 'Licensing Agreement',
+    hint: 'IP/software licensing with royalty and scope constraints.'
+  },
+  {
+    value: 'distribution_reseller_agreement',
+    label: 'Distribution / Reseller Agreement',
+    hint: 'Channel/territory commitments and reseller commercial allocations.'
+  },
+  {
+    value: 'loan_financing_agreement',
+    label: 'Loan / Financing Agreement',
+    hint: 'Credit covenants and repayment terms with high-risk financial identifiers.'
+  },
+  {
+    value: 'employment_contract',
+    label: 'Employment Contract',
+    hint: 'High-density personal data (identity, compensation, employment terms).'
+  },
+  {
+    value: 'partnership_joint_venture',
+    label: 'Partnership / Joint Venture Agreement',
+    hint: 'Governance, voting, and profit-sharing terms between multiple entities.'
+  },
+  {
     value: 'general_contract',
     label: 'Other / General Contract',
     hint: 'Baseline policy: standard PII, financial figures, and identifiers.'

@@ -1,0 +1,104 @@
+======================================================================
+PHALANX REDACTION TEST FILE — ALL ENTITY TYPES
+======================================================================
+This document is FICTIONAL and generated solely for redaction testing.
+All names, IDs, accounts, emails, phones, and addresses are fake.
+======================================================================
+
+--- SECTION 1: PEOPLE & NAMES ---
+Full Name: Dr. Alexandra Mercer-Williams
+Employee: James Donovan Hartley
+Signatory: Priya Krishnaswamy, Chief Legal Officer
+DPO Contact: Robert Van Der Berg
+
+--- SECTION 2: CONTACT DETAILS ---
+Email (personal):    alex.mwilliams@gmail.com
+Email (work):        j.hartley@veritastech.com
+Email (security):    security.ops@axioncloud.io
+Phone (US):          +1 (312) 555-0147
+Phone (UK):          +44 20 7946 0812
+Phone (India):       +91 98201 77432
+Phone (alt):         (408) 555-0199
+
+--- SECTION 3: NATIONAL IDENTITY NUMBERS ---
+US Social Security Number:       219-88-4721
+Aadhaar Card Number:             8291 4820 9182
+PAN Card:                        BKRPM7281Q
+Indian PAN (alt):                ABCDE1234F
+
+--- SECTION 4: FINANCIAL & BANKING ---
+Credit Card:         4111 1111 1111 1111
+Credit Card (dashes): 5500-0000-0000-0004
+IBAN (US):           US64CHAS0000009876543210
+IBAN (UK):           GB82WEST12345698765432
+IBAN (Germany):      DE89370400440532013000
+Bank Account No.:    Account No. 9876543210
+Bank Account (alt):  account number 0042-883920-001
+SWIFT / BIC:         HSBCINBB
+
+--- SECTION 5: CONTRACT COMMERCIAL TERMS ---
+Annual Contract Value (ACV) of USD $1,850,000.
+Total Contract Value (TCV) shall be $4,200,000.
+Annual Recurring Revenue (ARR): $980,000
+The fee is 12.5% of the net revenue per quarter.
+Late payment interest at 1.75% per month.
+Invoiced amount: ₹45,00,000
+EUR 230,000 paid upon milestone completion.
+GBP 85,000 retention fee.
+
+--- SECTION 6: PURCHASE ORDERS & PROCUREMENT ---
+Purchase Order: PO-2026-BLD-77291
+P.O. Number: PO/MFG/88102
+Reference PO#: PO-994820
+
+--- SECTION 7: PARTY NAMES & CORPORATE ENTITIES ---
+NeuralScale Analytics Inc. ("Vendor")
+OmniPath Logistics Corp. ("Customer")
+Barclays Corporate Bank PLC ("Lender")
+affiliates including Titan Sub Holdings Ltd. and Crest Capital SA
+
+--- SECTION 8: TRADE SECRETS & PROJECT CODE NAMES ---
+Project Codename "Helios-Prime"
+Project Codename: NightFalcon
+trade secret algorithm known as "DeepMesh Optimizer" represents core IP.
+proprietary process known as ThermoFuse-V7
+
+--- SECTION 9: LOCATION & JURISDICTION ---
+Data centers are located in Frankfurt, Germany.
+Processing hosted in Singapore, Asia-Pacific.
+Governed by the laws of the State of New York.
+Courts of England and Wales have exclusive jurisdiction.
+construed in accordance with the laws of California.
+
+--- SECTION 10: NETWORK & TECHNICAL IDENTIFIERS ---
+Server IP:           192.168.100.25
+Public API endpoint: https://api.neuralscale.io/v2/inference
+Webhook URL:         https://hooks.omnipath.io/event/abc123
+
+--- SECTION 11: DATA PROTECTION OFFICER ---
+The Data Protection Officer (DPO) is: Elena Vasquez
+DPO reachable at dpo@omnipath.io or +1 (650) 555-0177
+
+--- SECTION 12: SIGNATORIES ---
+Name: Marcus J. Holloway
+Signed by: Dr. Priya Krishnaswamy
+Authorized Signatory: Thomas E. Whitfield III
+
+--- SECTION 13: SUB-PROCESSORS ---
+sub-processors including Google Cloud EMEA Ltd. and Snowflake Computing Inc.
+sub-processors namely Datadog Inc., Twilio Inc.
+
+--- SECTION 14: MIXED PARAGRAPH (REAL CONTRACT SIMULATION) ---
+This Agreement is entered into by NeuralScale Analytics Inc. ("Vendor"),
+with registered offices at 1400 Harbor Blvd, Sunnyvale, CA 94089, and
+OmniPath Logistics Corp. ("Customer"), contact person Rachel Kim at
+r.kim@omnipath.io, +1 (213) 555-0182. The ACV is USD $2,400,000. Payments
+shall be remitted to Chase Bank, Account No. 4820193847, IBAN
+US12CHAS00004820193847. Employee SSN on file: 382-19-0022. Aadhaar: 9182
+0293 8172. PAN: HDPQR4821Z. Vendor signatory: Name: James T. Holloway.
+Governed by laws of the State of Delaware. IP address of primary server:
+10.22.14.55. Security contact: Marcus Vance at m.vance@neuralscale.io.
+
+======================================================================
+END OF TEST DOCUMENT
+======================================================================
