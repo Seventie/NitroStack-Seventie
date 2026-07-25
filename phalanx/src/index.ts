@@ -38,39 +38,39 @@ async function bootstrap() {
 
         const contractType = String(req.body?.contractType || 'general_contract');
         const filename = String(file.originalname || 'contract.txt');
+        console.log(`\n📄 [Pipeline Start] Processing document: "${filename}"`);
 
         const parser = new ParserService();
+        console.log('   [Step 1/4] Extracting text and preserving multi-page numbering...');
         const parseResult = await parser.parse(file.buffer.toString('base64'), filename);
         const text = parseResult.text || file.buffer.toString('utf8');
+        const calculatedPageCount = (text.match(/---PAGE_\d+---/g) || []).length || 1;
+        console.log(`              Extracted ${text.length} chars across ~${calculatedPageCount} page(s).`);
+
+        console.log('   [Step 2/4] Executing PII token redaction & building complete Knowledge Graph...');
         const redactionResult = await pipeline.redactionService.redact(text, contractType, `sess_${Date.now()}`);
-        const graph = await pipeline.redlineService['graphService'].buildFromText(redactionResult.redactedText, contractType, redactionResult.sessionId);
+        const graph = await pipeline.graphService.buildFromText(redactionResult.redactedText, contractType, redactionResult.sessionId);
+        console.log(`              Graph materialized: ${graph.nodeCount} nodes, ${graph.edgeCount} dependency edges.`);
 
-        const findings = [
-          {
-            id: 'c1',
-            agent: 'liability' as const,
-            severity: 'High' as const,
-            category: 'liability',
-            title: 'Liability cap should be tightened',
-            description: 'The clause appears to include a broad liability limitation that could under-protect the business.',
-            clause: redactionResult.redactedText.slice(0, 220),
-            clauseId: 'clause-1',
-            recommendation: 'Add a mutual cap and carve-outs for fraud, confidentiality breaches, and payment obligations.',
-            confidence: 0.82
-          }
-        ];
+        console.log('   [Step 3/4] Running all 4 specialized Risk Agents across subgraphs concurrently...');
+        const analysis = await pipeline.riskService.runAllAgents(graph.graphId);
+        console.log(`              Found ${analysis.findings.length} risk finding(s) and ${analysis.strengths.length} mitigating protection(s).`);
 
+        console.log('   [Step 4/4] Synthesizing professional redlines and prioritized negotiation email...');
         const proposal = await pipeline.redlineService.synthesize(graph.graphId, redactionResult.sessionId, {
-          findings,
+          findings: analysis.findings,
           restore: true
         });
+        console.log(`✅ [Pipeline Complete] Risk Score: ${proposal.riskScore}/100. Returning payload to UI.\n`);
 
         const responsePayload = {
           documentId: `doc_${Date.now()}`,
           fileName: filename,
-          pageCount: 1,
+          pageCount: calculatedPageCount,
           processingTime: 'Done',
           riskScore: proposal.riskScore || 85,
+          scoreBreakdown: analysis.scoreBreakdown,
+          strengths: analysis.strengths,
           summary: proposal.summary || 'The document was analyzed successfully.',
           graph: {
             graphId: graph.graphId,
@@ -82,18 +82,25 @@ async function bootstrap() {
             })),
             edges: []
           },
-          findings: findings.map((finding) => ({
+          findings: analysis.findings.map((finding: any) => ({
             severity: finding.severity,
             category: finding.category,
-            title: finding.title,
-            description: finding.description,
+            title: finding.issue, // Map issue to title for frontend or update frontend
+            issue: finding.issue,
+            businessImpact: finding.businessImpact,
+            legalReason: finding.legalReason,
             clause: finding.clause,
+            clauseTitle: finding.clauseTitle,
+            page: finding.page,
+            confidence: finding.confidence,
             recommendation: finding.recommendation
           })),
           redlines: proposal.redlines.map((r: any) => ({
             original: r.originalText,
             proposed: r.proposedText,
-            rationale: r.rationale
+            reason: r.reason,
+            negotiationPosition: r.negotiationPosition,
+            priority: r.priority
           })),
           email: `${proposal.negotiationEmail?.subject || 'Review proposed revisions'}\n\n${proposal.negotiationEmail?.body || ''}`
         };

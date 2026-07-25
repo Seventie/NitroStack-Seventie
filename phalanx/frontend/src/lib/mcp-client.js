@@ -28,6 +28,8 @@ export async function analyzeDocument(file, contractType) {
       processingTime: result.processingTime || 'Done'
     },
     summary: result.summary || 'The document was analyzed successfully.',
+    strengths: result.strengths || [],
+    scoreBreakdown: result.scoreBreakdown || {},
     graph: result.graph || null,
     findings: result.findings || [],
     redlines: result.redlines || [],

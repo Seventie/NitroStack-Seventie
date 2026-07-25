@@ -24,7 +24,9 @@ export type ClauseCategory =
 
 export interface ExtractedClause {
   id: string;
-  heading: string;
+  title: string;
+  page: number;
+  sectionNumber: string;
   /** Redacted clause text, verbatim. */
   text: string;
   category: ClauseCategory;
@@ -73,10 +75,12 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['id', 'heading', 'text', 'category', 'tokens', 'dependsOn'],
+        required: ['id', 'title', 'page', 'sectionNumber', 'text', 'category', 'tokens', 'dependsOn'],
         properties: {
           id: { type: 'string' },
-          heading: { type: 'string' },
+          title: { type: 'string' },
+          page: { type: 'number' },
+          sectionNumber: { type: 'string' },
           text: { type: 'string' },
           category: {
             type: 'string',
@@ -140,8 +144,9 @@ The text you receive has ALREADY been redacted. Sensitive values appear as brack
 
 Rules for extraction:
 1. One clause node per operative provision. Split a numbered section into multiple clauses when it contains genuinely separate obligations; do not split a single obligation across nodes.
-2. Copy clause 'text' verbatim from the input. Do not summarize, reword, or clean it up. Truncate only if a clause exceeds roughly 1200 characters, and mark the truncation with a trailing ellipsis.
-3. Assign exactly one category per clause, from the allowed enum. Use 'other' only when no category fits.
+2. For each clause, provide its exact 'title' (e.g. "Limitation of Liability"), the 'page' number it begins on (using the ---PAGE_X--- markers provided in the text), and its 'sectionNumber' (e.g. "16.1", "IV(a)"). If a section number is not present, use an empty string.
+3. Copy clause 'text' verbatim from the input. Do not summarize, reword, or clean it up. Truncate only if a clause exceeds roughly 1200 characters, and mark the truncation with a trailing ellipsis.
+4. Assign exactly one category per clause, from the allowed enum. Use 'other' only when no category fits.
 4. Set 'obligor' and 'obligee' to the placeholder token or the contract's own role label ("Provider", "Customer"). Omit them for clauses that impose no obligation on a specific party.
 5. 'tokens' lists every placeholder token appearing in that clause's text.
 6. 'dependsOn' captures real structural dependency, not topical similarity. A termination clause that forces data deletion depends on the data-deletion clause. Two unrelated clauses that both mention fees do not depend on each other.
@@ -246,26 +251,46 @@ ${redactedText}
       ['parties', /\b(this agreement is (?:made|entered)|between .* and )\b/i]
     ];
 
-    // Split on things that look like clause headings: "5.", "5.2", "ARTICLE 5", "Section 5".
+    // We now have page markers in the text (e.g., \n---PAGE_1---\n)
+    let currentPage = 1;
+
+    // Split on things that look like clause headings: "5.", "5.2", "ARTICLE 5", "Section 5", or page markers.
+    // Wait, splitting by just that might split pages awkwardly, let's keep the split and just extract page markers.
     const blocks = redactedText
-      .split(/\n(?=\s*(?:(?:ARTICLE|Article|SECTION|Section)\s+\d+|\d+(?:\.\d+)*\.?\s+[A-Z]))/)
+      .split(/\n(?=\s*(?:(?:ARTICLE|Article|SECTION|Section)\s+\d+|\d+(?:\.\d+)*\.?\s+[A-Z]|---PAGE_\d+---))/)
       .map((b) => b.trim())
-      .filter((b) => b.length > 40);
+      .filter((b) => b.length > 20);
 
-    const clauses: ExtractedClause[] = blocks.map((block, i) => {
+    const clauses: ExtractedClause[] = [];
+    let clauseIdCounter = 1;
+
+    for (let block of blocks) {
+      const pageMatch = block.match(/^---PAGE_(\d+)---/);
+      if (pageMatch) {
+        currentPage = parseInt(pageMatch[1], 10);
+        block = block.replace(/^---PAGE_\d+---\s*/, '');
+      }
+      if (block.length < 40) continue;
+
       const firstLine = block.split('\n')[0].slice(0, 120).trim();
-      const category =
-        CATEGORY_KEYWORDS.find(([, re]) => re.test(block))?.[0] ?? ('other' as ClauseCategory);
+      
+      const secMatch = firstLine.match(/^(?:ARTICLE|Article|SECTION|Section\s+)?(\d+(?:\.\d+)*)/);
+      const sectionNumber = secMatch ? secMatch[1] : '';
+      const title = firstLine.replace(/^(?:ARTICLE|Article|SECTION|Section\s+)?\d+(?:\.\d+)*\.?\s*/, '') || `Clause ${clauseIdCounter}`;
 
-      return {
-        id: `c${i + 1}`,
-        heading: firstLine || `Clause ${i + 1}`,
+      const category = CATEGORY_KEYWORDS.find(([, re]) => re.test(block))?.[0] ?? ('other' as ClauseCategory);
+
+      clauses.push({
+        id: `c${clauseIdCounter++}`,
+        title,
+        page: currentPage,
+        sectionNumber,
         text: block.slice(0, 1200),
         category,
         tokens: [...new Set(block.match(/\[[A-Z_]+_\d+\]/g) ?? [])],
         dependsOn: []
-      };
-    });
+      });
+    }
 
     // Entities: one node per distinct token in the whole document.
     const tokenTypes: Record<string, ExtractedEntity['type']> = {
@@ -334,18 +359,20 @@ ${redactedText}
     const graph = new Graph({ multi: true, type: 'directed' });
     const categories: Record<string, number> = {};
 
-    for (const clause of extraction.clauses) {
-      if (graph.hasNode(clause.id)) continue;
-      graph.addNode(clause.id, {
+    for (const c of extraction.clauses) {
+      graph.addNode(c.id, {
         kind: 'clause',
-        heading: clause.heading,
-        text: clause.text,
-        category: clause.category,
-        obligor: clause.obligor ?? null,
-        obligee: clause.obligee ?? null,
-        tokens: clause.tokens ?? []
+        type: 'clause',
+        title: c.title,
+        page: c.page,
+        sectionNumber: c.sectionNumber,
+        text: c.text,
+        category: c.category,
+        obligor: c.obligor ?? null,
+        obligee: c.obligee ?? null,
+        tokens: c.tokens ?? []
       });
-      categories[clause.category] = (categories[clause.category] || 0) + 1;
+      categories[c.category] = (categories[c.category] || 0) + 1;
     }
 
     for (const entity of extraction.entities ?? []) {
@@ -389,7 +416,9 @@ ${redactedText}
   ): Promise<ContractGraph> {
     const normalized: ExtractedClause[] = clauses.map((c) => ({
       id: c.id,
-      heading: c.text.slice(0, 80),
+      title: c.text.slice(0, 80),
+      page: 1,
+      sectionNumber: c.id,
       text: c.text,
       category: (c.type as ClauseCategory) ?? 'other',
       tokens: [...new Set(c.text.match(/\[[A-Z_]+_\d+\]/g) ?? [])],
@@ -426,7 +455,7 @@ ${redactedText}
     graphId: string,
     categories: ClauseCategory[]
   ): {
-    clauses: Array<{ id: string; heading: string; text: string; category: string; obligor: string | null; obligee: string | null; tokens: string[] }>;
+    clauses: Array<{ id: string; title: string; page: number; sectionNumber: string; text: string; category: string; obligor: string | null; obligee: string | null; tokens: string[] }>;
     entities: Array<{ id: string; label: string; entityType: string }>;
     relations: Array<{ from: string; to: string; relation: string; note: string | null }>;
   } {
@@ -452,7 +481,9 @@ ${redactedText}
       if (attrs.kind === 'clause') {
         clauses.push({
           id,
-          heading: attrs.heading,
+          title: attrs.title ?? '',
+          page: attrs.page ?? 1,
+          sectionNumber: attrs.sectionNumber ?? '',
           text: attrs.text,
           category: attrs.category,
           obligor: attrs.obligor ?? null,

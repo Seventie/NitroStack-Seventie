@@ -94,6 +94,12 @@ async function run() {
   console.log(`   Total Findings   : ${allRisks.findings.length}`);
   console.log(`   LLM active?      : ${llmActive ? '✨ YES' : '🔧 No — heuristic fallback'}\n`);
 
+  console.log(`   Strengths Found  : ${allRisks.strengths?.length || 0}`);
+  if (allRisks.scoreBreakdown && Object.keys(allRisks.scoreBreakdown).length > 0) {
+    console.log(`   Score Breakdown  : ${JSON.stringify(allRisks.scoreBreakdown)}`);
+  }
+  console.log();
+
   if (allRisks.findings.length === 0) {
     console.log('⚠️  No findings returned. Check LLM availability and graph query logic.');
   } else {
@@ -102,12 +108,13 @@ async function run() {
       const order: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
       return (order[a.severity] ?? 9) - (order[b.severity] ?? 9);
     });
-    console.log('   Top findings:\\n');
+    console.log('   Top findings:\n');
     for (const f of sorted.slice(0, 8) as any[]) {
-      console.log(`   ${ICONS[f.severity] ?? '⚪'} [${f.severity}] [${f.agent ?? '?'}] ${f.title}`);
-      if (f.clauseId) console.log(`      📌 Clause ${f.clauseId}: "${(f.clause ?? '').slice(0, 100)}"`);
-      console.log(`      ${(f.description ?? '').slice(0, 120)}`);
-      if (f.recommendation) console.log(`      → ${f.recommendation.slice(0, 100)}`);
+      console.log(`   ${ICONS[f.severity] ?? '⚪'} [${f.severity}] [${f.agent ?? '?'}] ${f.issue || f.title}`);
+      if (f.clauseId) console.log(`      📌 Clause ${f.clauseId}${f.page ? ` (Page ${f.page})` : ''}: "${(f.clause ?? '').slice(0, 100)}"`);
+      console.log(`      💥 Impact: ${((f.businessImpact || f.description) || '').slice(0, 120)}`);
+      if (f.legalReason) console.log(`      ⚖️  Reason: ${f.legalReason}`);
+      if (f.recommendation) console.log(`      → Advice: ${f.recommendation.slice(0, 100)}`);
       if (f.confidence != null) console.log(`      Confidence: ${(f.confidence * 100).toFixed(0)}%`);
       console.log();
     }
@@ -129,7 +136,10 @@ async function run() {
     console.log(`   Score: ${report.score ?? 'N/A'}  |  Findings: ${report.findings?.length ?? 0}  |  ${src}`);
     for (const f of (report.findings ?? []).slice(0, 2) as any[]) {
       const icon = { Critical: '🔴', High: '🟠', Medium: '🟡', Low: '🟢' }[f.severity as string] ?? '⚪';
-      console.log(`      ${icon} [${f.severity}] ${f.title}`);
+      console.log(`      ${icon} [${f.severity}] ${f.issue || f.title}`);
+    }
+    if (report.strengths && report.strengths.length > 0) {
+      console.log(`      ✓ Strengths: ${report.strengths.slice(0, 2).join('; ')}`);
     }
     console.log();
   }

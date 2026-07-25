@@ -10,15 +10,14 @@ export interface Finding {
   agent: AgentKey;
   severity: Severity;
   category: string;
-  title: string;
-  /** Plain-English explanation of the exposure, founder-readable. */
-  description: string;
-  /** Redacted clause text the finding is anchored to. */
+  issue: string;
+  businessImpact: string;
+  legalReason: string;
   clause: string;
+  clauseTitle: string;
+  page: number | null;
   clauseId: string | null;
-  /** What to ask for instead. */
   recommendation: string;
-  /** Which market or legal norm this deviates from. */
   benchmarkNote?: string;
   confidence: number;
 }
@@ -30,6 +29,7 @@ export interface AgentReport {
   source: 'llm' | 'heuristic';
   clausesExamined: number;
   score: number;
+  strengths: string[];
   findings: Finding[];
 }
 
@@ -38,7 +38,7 @@ const SEVERITY_WEIGHT: Record<Severity, number> = { Critical: 40, High: 25, Medi
 const FINDINGS_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['findings'],
+  required: ['findings', 'strengths'],
   properties: {
     findings: {
       type: 'array',
@@ -46,20 +46,25 @@ const FINDINGS_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         required: [
-          'severity', 'category', 'title', 'description',
+          'severity', 'category', 'issue', 'businessImpact', 'legalReason',
           'clauseId', 'recommendation', 'confidence'
         ],
         properties: {
           severity: { type: 'string', enum: ['Critical', 'High', 'Medium', 'Low'] },
           category: { type: 'string' },
-          title: { type: 'string' },
-          description: { type: 'string' },
+          issue: { type: 'string' },
+          businessImpact: { type: 'string' },
+          legalReason: { type: 'string' },
           clauseId: { type: 'string' },
           recommendation: { type: 'string' },
           benchmarkNote: { type: 'string' },
           confidence: { type: 'number' }
         }
       }
+    },
+    strengths: {
+      type: 'array',
+      items: { type: 'string' }
     }
   }
 } as const;
@@ -78,10 +83,11 @@ Token discipline (non-negotiable):
 
 Analysis discipline:
 - You advise the SMALLER party — a founder or startup counsel signing paper drafted by a larger counterparty. Asymmetry favouring the counterparty is a finding; asymmetry favouring your side is not.
-- Anchor every finding to a clause id from the sub-graph you were given. If a risk comes from the ABSENCE of a provision, use the id of the closest related clause and state plainly in the description that the provision is missing.
+- Anchor every finding to a clause id from the sub-graph you were given. The 'issue' must reference the actual contract language.
 - Report only what the text supports. Do not invent clause language. Do not report a risk the clause actually addresses.
-- Traverse the dependency edges. A liability cap in one clause may be gutted by a carve-out in another; a termination right may trigger an obligation elsewhere. Findings that ignore the dependency structure are low quality.
-- Write descriptions for a non-lawyer founder: what could go wrong, in concrete business terms. Write recommendations as the specific ask to send back to the counterparty.
+- Traverse the dependency edges. A liability cap in one clause may be gutted by a carve-out in another; a termination right may trigger an obligation elsewhere. Use this graph context while generating recommendations.
+- Write 'businessImpact' for a non-lawyer founder (what could go wrong, in concrete business terms), 'legalReason' for a lawyer, and 'recommendation' as actionable negotiation advice.
+- You must also identify strengths (e.g. "Confidentiality clause exists", "IP indemnification exists") and list them in the 'strengths' array.
 
 Severity calibration:
 - Critical: uncapped or existential exposure — unlimited liability, uncapped IP indemnity, perpetual unilateral licence to your IP.
@@ -459,11 +465,11 @@ export class RiskService {
 
     const subgraph = this.graphService.query(graphId, spec.categories);
 
-    let findings = await this.runAgentWithLlm(spec, subgraph);
+    let res = await this.runAgentWithLlm(spec, subgraph);
     let source: 'llm' | 'heuristic' = 'llm';
 
-    if (!findings) {
-      findings = this.runAgentHeuristically(spec, subgraph);
+    if (!res) {
+      res = this.runAgentHeuristically(spec, subgraph);
       source = 'heuristic';
     }
 
@@ -473,8 +479,9 @@ export class RiskService {
       graphId,
       source,
       clausesExamined: subgraph.clauses.length,
-      score: this.score(findings),
-      findings
+      score: this.score(res),
+      strengths: res.strengths || [],
+      findings: res.findings
     };
   }
 
@@ -482,6 +489,8 @@ export class RiskService {
   async runAllAgents(graphId: string): Promise<{
     graphId: string;
     totalScore: number;
+    scoreBreakdown: Record<string, number>;
+    strengths: string[];
     reports: AgentReport[];
     findings: Finding[];
   }> {
@@ -492,10 +501,22 @@ export class RiskService {
     const findings = reports
       .flatMap((r) => r.findings)
       .sort((a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity]);
+      
+    const strengths = reports.flatMap(r => r.strengths || []);
+
+    const scoreBreakdown: Record<string, number> = {};
+    for (const r of reports) {
+      // rough breakdown per agent. +15 for critical, etc., negative for strengths.
+      let agentScore = r.findings.reduce((sum, f) => sum + SEVERITY_WEIGHT[f.severity], 0);
+      agentScore -= (r.strengths?.length || 0) * 2; // subtract for strengths
+      scoreBreakdown[r.label] = agentScore;
+    }
 
     return {
       graphId,
-      totalScore: Math.min(100, reports.reduce((sum, r) => sum + r.score, 0)),
+      totalScore: Math.min(100, Math.max(0, reports.reduce((sum, r) => sum + r.score, 0) - strengths.length * 2)),
+      scoreBreakdown,
+      strengths,
       reports,
       findings
     };
@@ -504,13 +525,13 @@ export class RiskService {
   private async runAgentWithLlm(
     spec: AgentSpec,
     subgraph: ReturnType<GraphService['query']>
-  ): Promise<Finding[] | null> {
+  ): Promise<{ findings: Finding[]; strengths: string[] } | null> {
     if (!this.llm.available || subgraph.clauses.length === 0) return null;
 
     const clauseBlock = subgraph.clauses
       .map(
         (c) =>
-          `<clause id="${c.id}" category="${c.category}" obligor="${c.obligor ?? 'unspecified'}" obligee="${c.obligee ?? 'unspecified'}">\n${c.heading}\n${c.text}\n</clause>`
+          `<clause id="${c.id}" category="${c.category}" title="${c.title}" page="${c.page}" obligor="${c.obligor ?? 'unspecified'}" obligee="${c.obligee ?? 'unspecified'}">\n${c.text}\n</clause>`
       )
       .join('\n\n');
 
@@ -536,7 +557,8 @@ ${relationBlock || '(none)'}
 Return findings ordered most severe first. Return an empty array only if the clauses genuinely contain no risk in your area — do not invent findings to fill space, and do not omit a real one because it seems obvious.`;
 
     const result = await this.llm.json<{
-      findings: Array<Omit<Finding, 'id' | 'agent' | 'clause'>>;
+      findings: Array<Omit<Finding, 'id' | 'agent' | 'clause' | 'clauseTitle' | 'page'>>;
+      strengths: string[];
     }>({
       system: spec.system,
       user,
@@ -545,17 +567,24 @@ Return findings ordered most severe first. Return an empty array only if the cla
       effort: 'high'
     });
 
-    if (!result?.findings) return null;
+    if (!result?.findings) return { findings: [], strengths: [] } as any;
 
-    const clauseText = new Map(subgraph.clauses.map((c) => [c.id, c.text]));
+    const clauseData = new Map(subgraph.clauses.map((c) => [c.id, { text: c.text, title: c.title, page: c.page }]));
 
-    return result.findings.map((f, i) => ({
-      ...f,
-      id: `${spec.key}_${i + 1}`,
-      agent: spec.key,
-      clauseId: f.clauseId ?? null,
-      clause: clauseText.get(f.clauseId ?? '') ?? ''
-    }));
+    const mappedFindings = result.findings.map((f, i) => {
+      const c = clauseData.get(f.clauseId ?? '') ?? { text: '', title: '', page: null };
+      return {
+        ...f,
+        id: `${spec.key}_${i + 1}`,
+        agent: spec.key,
+        clauseId: f.clauseId ?? null,
+        clause: c.text,
+        clauseTitle: c.title,
+        page: c.page
+      };
+    });
+
+    return { findings: mappedFindings, strengths: result.strengths || [] } as any;
   }
 
   /**
@@ -565,9 +594,9 @@ Return findings ordered most severe first. Return an empty array only if the cla
   private runAgentHeuristically(
     spec: AgentSpec,
     subgraph: ReturnType<GraphService['query']>
-  ): Finding[] {
-    const corpus = subgraph.clauses.map((c) => `${c.heading}\n${c.text}`).join('\n\n');
-    if (!corpus.trim()) return [];
+  ): { findings: Finding[]; strengths: string[] } {
+    const corpus = subgraph.clauses.map((c) => `${c.title}\n${c.text}`).join('\n\n');
+    if (!corpus.trim()) return { findings: [], strengths: [] };
 
     const findings: Finding[] = [];
 
@@ -578,7 +607,7 @@ Return findings ordered most severe first. Return an empty array only if the cla
       // Anchor to whichever clause actually produced the match.
       const anchor = rule.present
         ? subgraph.clauses.find((c) =>
-          new RegExp(rule.present!.source, rule.present!.flags).test(`${c.heading}\n${c.text}`)
+          new RegExp(rule.present!.source, rule.present!.flags).test(`${c.title}\n${c.text}`)
         ) ?? subgraph.clauses[0]
         : subgraph.clauses[0];
 
@@ -587,9 +616,12 @@ Return findings ordered most severe first. Return an empty array only if the cla
         agent: spec.key,
         severity: rule.severity,
         category: rule.category,
-        title: rule.title,
-        description: rule.description,
+        issue: rule.title,
+        businessImpact: rule.description,
+        legalReason: 'Local rules-engine finding',
         clause: anchor?.text ?? '',
+        clauseTitle: anchor?.title ?? '',
+        page: anchor?.page ?? null,
         clauseId: anchor?.id ?? null,
         recommendation: rule.recommendation,
         benchmarkNote: 'Local rules-engine finding — no model configured for this run.',
@@ -597,10 +629,13 @@ Return findings ordered most severe first. Return an empty array only if the cla
       });
     }
 
-    return findings.sort((a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity]);
+    return {
+      findings: findings.sort((a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity]),
+      strengths: []
+    } as any;
   }
 
-  private score(findings: Finding[]): number {
-    return Math.min(100, findings.reduce((sum, f) => sum + SEVERITY_WEIGHT[f.severity], 0));
+  private score(result: any): number {
+    return Math.min(100, Math.max(0, result.findings.reduce((sum: number, f: any) => sum + SEVERITY_WEIGHT[f.severity as Severity], 0) - (result.strengths?.length || 0) * 2));
   }
 }
