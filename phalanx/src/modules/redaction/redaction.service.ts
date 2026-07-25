@@ -204,7 +204,26 @@ export class RedactionService {
 
     let redactedText = text;
 
-    // Pass 1 (primary) — external NER, when configured.
+    // Pass 1 (primary/offline) — regex heuristics.
+    // Execute this FIRST so hard PII never goes to the cloud.
+    for (const pattern of PATTERNS) {
+      if (!policy.regexEntities.includes(pattern.name)) continue;
+
+      const action = this.decideAction(pattern.name, legalProfile);
+      if (action === 'preserve') continue;
+
+      // Extract raw matches and then apply them string-wise to avoid intersecting
+      // already-minted tokens (which regex might falsely match).
+      const matches = Array.from(redactedText.matchAll(pattern.regex)).map((m) => m[0].trim());
+      for (const value of matches) {
+        if (value.length < 3) continue;
+        const token = mint(pattern.name, value);
+        redactedText = this.replaceOutsideTokens(redactedText, value, token);
+      }
+    }
+
+    // Pass 2 (secondary/cloud) — external NER, when configured.
+    // Receives the partially-redacted text with PII safely masked.
     if (this.ner.available) {
       const labels = [...new Set([...policy.contextEntities, ...policy.regexEntities])];
       const entities = await this.ner.extractEntities(redactedText, labels);
@@ -214,8 +233,10 @@ export class RedactionService {
         entities.sort((a, b) => b.text.length - a.text.length);
         for (const ent of entities) {
           const value = ent.text.trim();
-          if (!this.isRedactableValue(value)) continue;
-          if (this.decideAction(ent.label, legalProfile) === 'preserve') continue;
+          if (value.length < 3) continue;
+
+          const action = this.decideAction(ent.label, legalProfile);
+          if (action === 'preserve') continue; // Not masking this entity class
 
           const token = mint(ent.label, value);
           redactedText = this.replaceOutsideTokens(redactedText, value, token);
