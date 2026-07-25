@@ -161,7 +161,7 @@ export class GraphService {
   /** In-memory graph store, keyed by graphId. NetworkX-equivalent, process-local. */
   private graphs = new Map<string, { graph: Graph; meta: Omit<ContractGraph, 'export'> }>();
 
-  constructor(private llm: LlmService) {}
+  constructor(private llm: LlmService) { }
 
   /**
    * Build a clause graph from REDACTED text. Uses the LLM extractor when a model

@@ -116,7 +116,7 @@ export class RedlineService {
     private graphService: GraphService,
     private redactionService: RedactionService,
     private llm: LlmService
-  ) {}
+  ) { }
 
   /**
    * Aggregate agent findings into a counter-proposal.

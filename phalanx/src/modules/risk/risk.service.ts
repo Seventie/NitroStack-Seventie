@@ -442,7 +442,7 @@ export class RiskService {
   constructor(
     private graphService: GraphService,
     private llm: LlmService
-  ) {}
+  ) { }
 
   listAgents(): Array<{ agent: AgentKey; label: string; categories: string[] }> {
     return Object.values(AGENTS).map((a) => ({
@@ -578,8 +578,8 @@ Return findings ordered most severe first. Return an empty array only if the cla
       // Anchor to whichever clause actually produced the match.
       const anchor = rule.present
         ? subgraph.clauses.find((c) =>
-            new RegExp(rule.present!.source, rule.present!.flags).test(`${c.heading}\n${c.text}`)
-          ) ?? subgraph.clauses[0]
+          new RegExp(rule.present!.source, rule.present!.flags).test(`${c.heading}\n${c.text}`)
+        ) ?? subgraph.clauses[0]
         : subgraph.clauses[0];
 
       findings.push({
