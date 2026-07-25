@@ -1,7 +1,8 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { ParserService } from './parser.service.js';
 
+@Injectable({ deps: [ParserService] })
 export class IngestTools {
   constructor(private parserService: ParserService) {}
 

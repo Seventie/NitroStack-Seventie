@@ -1,9 +1,10 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { RiskService, AgentKey } from './risk.service.js';
 
 const AGENT_KEYS = ['corporate', 'financial', 'liability', 'privacy'] as const;
 
+@Injectable({ deps: [RiskService] })
 export class RiskTools {
   constructor(private riskService: RiskService) {}
 

@@ -1,8 +1,9 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { ClassifierService } from './classifier.service.js';
 import { RedactionService } from './redaction.service.js';
 
+@Injectable({ deps: [ClassifierService, RedactionService] })
 export class RedactionTools {
   constructor(
     private classifierService: ClassifierService,

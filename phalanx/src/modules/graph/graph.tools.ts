@@ -1,4 +1,4 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { GraphService } from './graph.service.js';
 
@@ -9,6 +9,7 @@ const CLAUSE_CATEGORIES = [
   'assignment', 'force_majeure', 'other'
 ] as const;
 
+@Injectable({ deps: [GraphService] })
 export class GraphTools {
   constructor(private graphService: GraphService) {}
 

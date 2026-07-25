@@ -1,7 +1,8 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { BenchmarkService } from './benchmark.service.js';
 
+@Injectable({ deps: [BenchmarkService] })
 export class BenchmarkTools {
   constructor(private benchmarkService: BenchmarkService) {}
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nitrostack/core';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 export interface JsonRequest {
   /** System prompt — role, domain constraints, output discipline. */
@@ -13,26 +13,27 @@ export interface JsonRequest {
 }
 
 /**
- * Thin wrapper over the Google Gemini API using native responseSchema.
+ * Thin wrapper over NVIDIA NIM using the OpenAI-compatible API.
+ * Model: nvidia/nemotron-3-nano-30b-a3b (streaming → buffered for JSON).
  *
- * Contract for the rest of Phalanx: this service is the ONLY place that talks to
- * an external model. Everything passed in here must already be redacted — the
- * unredacted token map never leaves RedactionService's encrypted store.
- *
- * If GOOGLE_API_KEY is unset the service reports `available === false` and
- * every caller falls back to its local deterministic analyzer, so the pipeline
- * still runs end to end offline.
+ * If NVIDIA_API_KEY is unset the service reports `available === false` and
+ * every caller falls back to its local deterministic analyzer.
  */
 @Injectable()
 export class LlmService {
-  private client: GoogleGenerativeAI | null = null;
+  private client: OpenAI | null = null;
   private readonly model: string;
 
   constructor() {
-    this.model = process.env.PHALANX_MODEL || 'gemini-2.5-flash';
+    this.model = process.env.PHALANX_MODEL ?? 'nvidia/nemotron-3-nano-30b-a3b';
 
-    if (process.env.GOOGLE_API_KEY) {
-      this.client = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const apiKey = process.env.NVIDIA_API_KEY;
+    if (apiKey) {
+      this.client = new OpenAI({
+        baseURL: 'https://integrate.api.nvidia.com/v1',
+        apiKey,
+        timeout: 30_000
+      });
     }
   }
 
@@ -45,36 +46,49 @@ export class LlmService {
   }
 
   /**
-   * Run a structured-output completion. Returns `null` when no model is
-   * configured, when the request was refused, or when the response could not be
-   * parsed — callers must treat `null` as "use the local fallback".
+   * Run a structured-output completion. Returns `null` on any error so
+   * callers always fall back to heuristic analysis.
    */
   async json<T>(req: JsonRequest): Promise<T | null> {
     if (!this.client) return null;
 
     try {
-      const model = this.client.getGenerativeModel({
+      const systemPrompt =
+        req.system +
+        '\n\nIMPORTANT: Respond with ONLY valid JSON. No markdown fences, no prose. ' +
+        'The JSON must match this schema:\n' +
+        JSON.stringify(req.schema, null, 2);
+
+      // Collect the streaming response into a single string
+      const stream = await this.client.chat.completions.create({
         model: this.model,
-        systemInstruction: req.system,
-        generationConfig: {
-          responseMimeType: 'application/json',
-        }
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: req.user }
+        ],
+        temperature: 1,
+        top_p: 1,
+        max_tokens: req.maxTokens ?? 16384,
+        stream: true
       });
 
-      const response = await model.generateContent(req.user);
-      let text = response.response.text().trim();
+      let raw = '';
+      for await (const chunk of stream) {
+        const delta = (chunk.choices[0]?.delta as any)?.content;
+        if (delta) raw += delta;
+      }
 
-      if (!text) return null;
-      
-      // Safety parsing for markdown
-      text = text.replace(/^```json/i, '').replace(/```$/i, '').trim();
-      
-      return JSON.parse(text) as T;
+      raw = raw
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/,      '')
+        .replace(/\s*```$/,      '')
+        .trim();
+
+      if (!raw) return null;
+      return JSON.parse(raw) as T;
     } catch (err) {
       console.warn('[llm] completion failed, falling back to local analysis:', (err as Error).message);
       return null;
     }
   }
 }
-
-

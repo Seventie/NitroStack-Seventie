@@ -89,7 +89,7 @@ const ENTITY_STOPWORDS = new Set([
   'Customer', 'Provider', 'Vendor', 'Supplier', 'Company', 'Corporation'
 ]);
 
-@Injectable()
+@Injectable({ deps: [SessionVaultService] })
 export class RedactionService {
   private policies: Record<string, RedactionPolicy> = {};
 

@@ -156,7 +156,7 @@ Rules for extraction:
 
 Be exhaustive on liability, indemnity, payment, renewal, termination, data protection, and confidentiality — those subgraphs drive the risk analysis. Missing a liability cap or an auto-renewal window is a serious failure.`;
 
-@Injectable()
+@Injectable({ deps: [LlmService] })
 export class GraphService {
   /** In-memory graph store, keyed by graphId. NetworkX-equivalent, process-local. */
   private graphs = new Map<string, { graph: Graph; meta: Omit<ContractGraph, 'export'> }>();
@@ -182,6 +182,16 @@ export class GraphService {
     }
 
     return this.assemble(extraction, doctype, sessionId, source);
+  }
+
+  /** Build using ONLY the local heuristic — no LLM, no network, ~instant. */
+  buildHeuristicFromText(
+    redactedText: string,
+    doctype: string,
+    sessionId: string
+  ): ContractGraph {
+    const extraction = this.extractHeuristically(redactedText);
+    return this.assemble(extraction, doctype, sessionId, 'heuristic');
   }
 
   private async extractWithLlm(

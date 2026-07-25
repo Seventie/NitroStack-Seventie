@@ -11,7 +11,6 @@
     "studio": "npx nitrostack dev --studio"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@nitrostack/core": "latest",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -23,6 +22,7 @@
     "graphology-types": "^0.24.7",
     "mammoth": "^1.8.0",
     "multer": "^2.2.0",
+    "openai": "^4.104.0",
     "pdf-parse": "^1.1.1",
     "uuid": "^10.0.0",
     "zod": "^3.23.0"

@@ -437,7 +437,7 @@ Where a data-centre or jurisdiction token appears, note the transfer implication
   }
 };
 
-@Injectable()
+@Injectable({ deps: [GraphService, LlmService] })
 export class RiskService {
   constructor(
     private graphService: GraphService,

@@ -1,7 +1,8 @@
-import { ToolDecorator as Tool, ExecutionContext } from '@nitrostack/core';
+import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack/core';
 import { z } from 'zod';
 import { RedlineService } from './redline.service.js';
 
+@Injectable({ deps: [RedlineService] })
 export class RedlineTools {
   constructor(private redlineService: RedlineService) {}
 

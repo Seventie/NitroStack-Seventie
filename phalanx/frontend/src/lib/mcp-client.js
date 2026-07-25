@@ -61,6 +61,8 @@ export async function analyzeDocument(file, contractType) {
           }
         });
         
+        const analyzeData = JSON.parse(analyzeResult.content[0].text);
+        
         // 6. Synthesize Redlines (this aggregates and decrypts)
         const synthesizeResult = await client.callTool({
           name: 'generate_redline',
@@ -80,7 +82,14 @@ export async function analyzeDocument(file, contractType) {
             pageCount: 1,
             processingTime: 'Done'
           },
-          findings: finalData.findings || []
+          // From Part 3 (analyze_all_risks):
+          findings: analyzeData.findings || [],
+          reports: analyzeData.reports || [],
+          totalScore: analyzeData.totalScore || 0,
+          // From Part 4 (generate_redline):
+          redlines: finalData.redlines || [],
+          negotiationEmail: finalData.negotiationEmail || null,
+          summary: finalData.summary || ''
         });
 
       } catch (err) {
