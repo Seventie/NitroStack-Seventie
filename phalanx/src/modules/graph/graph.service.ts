@@ -132,13 +132,16 @@ const EXTRACTION_SCHEMA = {
 
 const GRAPH_BUILDER_SYSTEM = `You are a contract structuring engine. You convert a commercial contract into a clause-level knowledge graph that downstream risk agents will query.
 
-The text you receive has ALREADY been redacted. Sensitive values appear as bracketed placeholder tokens such as [CLIENT_NAME_001], [ACV_VALUE_004], [JURISDICTION_002], [MONEY_011]. These tokens are first-class entities:
-- Treat each distinct token as a stable identifier for one real-world value.
-- Reproduce tokens exactly, character for character, wherever they appear.
-- Never guess, infer, invent, or paraphrase what a token might stand for. Do not write "likely the customer" or "probably a US state".
-- If a clause's meaning genuinely depends on a redacted value you cannot see, extract the clause anyway and describe the dependency structurally.
+The text you receive has ALREADY been redacted. Some sensitive values appear as bracketed placeholder tokens such as [CLIENT_NAME_001] or [PHONE_NUMBER_002]. Other values (like money or jurisdictions) may have been preserved and will appear as normal text.
 
 Rules for extraction:
+- ONLY extract bracketed tokens that ACTUALLY EXIST in the provided text.
+- DO NOT invent, hallucinate, or create new bracketed tokens (e.g., do not output [MONEY_001] or [JURISDICTION_001] unless that exact string literally appears in the text).
+- If a value appears as normal text (e.g., "$5,200.00" or "State of California"), extract that exact normal text as the entity label. Do not convert it into a bracketed token.
+- Treat each distinct token or extracted value as a stable identifier for one real-world value.
+- If a clause's meaning genuinely depends on a redacted value you cannot see, extract the clause anyway and describe the dependency structurally.
+
+Rules for nodes and edges:
 1. One clause node per operative provision. Split a numbered section into multiple clauses when it contains genuinely separate obligations; do not split a single obligation across nodes.
 2. Copy clause 'text' verbatim from the input. Do not summarize, reword, or clean it up. Truncate only if a clause exceeds roughly 1200 characters, and mark the truncation with a trailing ellipsis.
 3. Assign exactly one category per clause, from the allowed enum. Use 'other' only when no category fits.
@@ -173,8 +176,18 @@ export class GraphService {
     doctype: string,
     sessionId: string
   ): Promise<ContractGraph> {
-    let extraction = await this.extractWithLlm(redactedText, doctype);
     let source: 'llm' | 'heuristic' = 'llm';
+    let extraction = null;
+
+    // For massive multi-page documents (>15k chars), LLM verbatim output exceeds token limits
+    // and causes slow timeout failures. Switch directly to the instant Heuristic Structural Engine.
+    if (redactedText.length > 15000) {
+      console.log(`\n   ⚡ [High-Speed Routing] Large contract detected (${redactedText.length} chars). Auto-switching to structural Graphology heuristic engine to bypass LLM token throttling...`);
+      extraction = this.extractHeuristically(redactedText);
+      source = 'heuristic';
+    } else {
+      extraction = await this.extractWithLlm(redactedText, doctype);
+    }
 
     if (!extraction || extraction.clauses.length === 0) {
       extraction = this.extractHeuristically(redactedText);
@@ -200,6 +213,106 @@ export class GraphService {
   ): Promise<{ clauses: ExtractedClause[]; entities: ExtractedEntity[]; edges: ExtractedEdge[] } | null> {
     if (!this.llm.available) return null;
 
+    // For short contracts (< 6000 chars / ~3 pages), single-pass is fast enough.
+    if (redactedText.length <= 6000) {
+      return this.extractSingleChunkWithLlm(redactedText, doctype);
+    }
+
+    // Map: For long documents, partition by page boundaries or double newlines into ~5000 char chunks.
+    const rawSections = redactedText.split(/(?=---PAGE_\d+---)/g);
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    for (const section of rawSections) {
+      if (currentChunk.length + section.length > 5500 && currentChunk.trim().length > 0) {
+        chunks.push(currentChunk.trim());
+        currentChunk = section;
+      } else {
+        currentChunk += (currentChunk ? '\n' : '') + section;
+      }
+    }
+    if (currentChunk.trim().length > 0) {
+      chunks.push(currentChunk.trim());
+    }
+
+    if (chunks.length <= 1) {
+      return this.extractSingleChunkWithLlm(redactedText, doctype);
+    }
+
+    console.log(`\n   ⚡ [Graph Map-Reduce] Splitting document (${redactedText.length} chars) into ${chunks.length} concurrent parallel chunks for high-speed graph extraction...`);
+    
+    const chunkResults = await Promise.all(
+      chunks.map((chunk, index) => {
+        console.log(`      🚀 [Chunk ${index + 1}/${chunks.length}] Dispatching parallel LLM graph query (${chunk.length} chars)...`);
+        return this.extractSingleChunkWithLlm(chunk, doctype);
+      })
+    );
+
+    // Reduce: Synthesize results across all parallel chunk invocations
+    const mergedClauses: ExtractedClause[] = [];
+    const mergedEntities: ExtractedEntity[] = [];
+    const mergedEdges: ExtractedEdge[] = [];
+
+    // Tracks (chunkIndex:oldId) -> unified newId
+    const idMapping = new Map<string, string>();
+    // Deduplicates parties/jurisdictions across pages by lowercased label
+    const entityLabelToId = new Map<string, string>();
+
+    let clauseCounter = 1;
+    let entityCounter = 1;
+
+    // 1. Merge entities first (converging identical tokens like [CLIENT_NAME_001] to a single node)
+    chunkResults.forEach((result, chunkIdx) => {
+      if (!result) return;
+      for (const entity of result.entities) {
+        const labelKey = (entity.label || '').toLowerCase().trim();
+        if (entityLabelToId.has(labelKey)) {
+          idMapping.set(`${chunkIdx}:${entity.id}`, entityLabelToId.get(labelKey)!);
+        } else {
+          const newId = `e${entityCounter++}`;
+          entityLabelToId.set(labelKey, newId);
+          idMapping.set(`${chunkIdx}:${entity.id}`, newId);
+          mergedEntities.push({ ...entity, id: newId });
+        }
+      }
+    });
+
+    // 2. Merge clauses (assigning sequential c1, c2, c3...)
+    chunkResults.forEach((result, chunkIdx) => {
+      if (!result) return;
+      for (const clause of result.clauses) {
+        const newId = `c${clauseCounter++}`;
+        idMapping.set(`${chunkIdx}:${clause.id}`, newId);
+
+        const mappedDependsOn = (clause.dependsOn || [])
+          .map(oldDep => idMapping.get(`${chunkIdx}:${oldDep}`))
+          .filter((id): id is string => Boolean(id));
+
+        mergedClauses.push({ ...clause, id: newId, dependsOn: mappedDependsOn });
+      }
+    });
+
+    // 3. Merge dependency edges using remapped IDs
+    chunkResults.forEach((result, chunkIdx) => {
+      if (!result) return;
+      for (const edge of result.edges) {
+        const fromId = idMapping.get(`${chunkIdx}:${edge.from}`) || edge.from;
+        const toId = idMapping.get(`${chunkIdx}:${edge.to}`) || edge.to;
+        if (fromId && toId) {
+          mergedEdges.push({ ...edge, from: fromId, to: toId });
+        }
+      }
+    });
+
+    console.log(`   ✨ [Graph Map-Reduce Complete] Synthesized ${mergedClauses.length} clauses, ${mergedEntities.length} deduplicated entities, and ${mergedEdges.length} edges in record time.`);
+
+    return { clauses: mergedClauses, entities: mergedEntities, edges: mergedEdges };
+  }
+
+  private async extractSingleChunkWithLlm(
+    redactedText: string,
+    doctype: string
+  ): Promise<{ clauses: ExtractedClause[]; entities: ExtractedEntity[]; edges: ExtractedEdge[] } | null> {
     const user = `Contract type selected by the user: ${doctype}
 
 Extract the clause graph from the redacted contract text below.

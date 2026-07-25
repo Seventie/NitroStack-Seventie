@@ -1,12 +1,8 @@
 import { Injectable } from '@nitrostack/core';
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
-import { fileURLToPath } from 'url';
+import { loadDataJson } from '../../common/data-path.js';
 import { SessionVaultService } from './session-vault.service.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { NerClientService } from './ner.service.js';
 
 export interface RedactionPolicy {
   label: string;
@@ -18,6 +14,18 @@ export interface RedactionPolicy {
   /** Things the policy explicitly wants left readable so agents can reason. */
   preserve: string[];
 }
+
+export interface LegalRuleSet {
+  version: string;
+  documentProfiles?: Array<{
+    doctype: string;
+    redact: string[];
+    anonymize: string[];
+    preserve: string[];
+  }>;
+}
+
+export type Action = 'redact' | 'anonymize' | 'preserve';
 
 export interface RedactionResult {
   sessionId: string;
@@ -89,28 +97,28 @@ const ENTITY_STOPWORDS = new Set([
   'Customer', 'Provider', 'Vendor', 'Supplier', 'Company', 'Corporation'
 ]);
 
-@Injectable({ deps: [SessionVaultService] })
+@Injectable({ deps: [SessionVaultService, NerClientService] })
 export class RedactionService {
   private policies: Record<string, RedactionPolicy> = {};
+  private legalRules: LegalRuleSet = { version: 'unknown' };
 
-  constructor(private vault: SessionVaultService) {
+  constructor(
+    private vault: SessionVaultService = new SessionVaultService(),
+    private ner: NerClientService = new NerClientService()
+  ) {
     this.loadPolicies();
   }
 
   private loadPolicies() {
-    // dist/modules/redaction/ and src/modules/redaction/ are both 3 levels deep.
-    const candidates = [
-      path.resolve(__dirname, '../../../data/redaction-policies.json'),
-      path.resolve(process.cwd(), 'data/redaction-policies.json')
-    ];
+    this.policies = loadDataJson<Record<string, RedactionPolicy>>('redaction-policies.json', {});
+    this.legalRules = loadDataJson<LegalRuleSet>('legal-rules.json', { version: 'unknown' });
 
-    for (const candidate of candidates) {
-      if (fs.existsSync(candidate)) {
-        this.policies = JSON.parse(fs.readFileSync(candidate, 'utf8'));
-        return;
-      }
+    if (Object.keys(this.policies).length === 0) {
+      console.warn('[redaction] No policy file loaded — falling back to the built-in maximal policy.');
     }
-    console.warn('[redaction] policy file not found; falling back to permissive defaults');
+    if (!this.legalRules.documentProfiles?.length) {
+      console.warn('[redaction] No legal rule profiles loaded — action defaults apply.');
+    }
   }
 
   listPolicies(): Array<{ doctype: string; label: string; description: string }> {
@@ -143,12 +151,33 @@ export class RedactionService {
     };
   }
 
+  private resolveLegalProfile(doctype: string): { redact: Set<string>; anonymize: Set<string>; preserve: Set<string> } {
+    const profile = this.legalRules.documentProfiles?.find((p) => p.doctype === doctype) ||
+      this.legalRules.documentProfiles?.find((p) => p.doctype === 'general_contract');
+
+    return {
+      redact: new Set(profile?.redact || []),
+      anonymize: new Set(profile?.anonymize || []),
+      preserve: new Set(profile?.preserve || [])
+    };
+  }
+
+  private decideAction(entity: string, legalProfile: { redact: Set<string>; anonymize: Set<string>; preserve: Set<string> }): Action {
+    if (legalProfile.preserve.has(entity)) return 'preserve';
+    if (legalProfile.redact.has(entity)) return 'redact';
+    if (legalProfile.anonymize.has(entity)) return 'anonymize';
+
+    if (entity === 'MONEY' || entity === 'PERCENTAGE' || entity === 'JURISDICTION') return 'preserve';
+    return 'anonymize';
+  }
+
   /**
    * Redact `text` under the policy for `doctype`, store the reverse map in the
    * encrypted vault, and return only the redacted text plus a type-only index.
    */
   async redact(text: string, doctype: string, sessionId?: string): Promise<RedactionResult> {
     const { key, policy } = this.resolvePolicy(doctype);
+    const legalProfile = this.resolveLegalProfile(key);
     const session = sessionId || `sess_${crypto.randomBytes(8).toString('hex')}`;
 
     const tokenMap: Record<string, string> = {};
@@ -175,33 +204,57 @@ export class RedactionService {
 
     let redactedText = text;
 
-    // Pass 1 — context-dependent entities. Runs first so a party name containing
-    // digits is not partly eaten by a structural pattern.
+    // Pass 1 (primary) — external NER, when configured.
+    if (this.ner?.available) {
+      const labels = [...new Set([...policy.contextEntities, ...policy.regexEntities])];
+      const entities = await this.ner.extractEntities(redactedText, labels);
+
+      if (entities.length > 0) {
+        // Longest first, so "Acme Corp International" is not clipped by "Acme Corp".
+        entities.sort((a, b) => b.text.length - a.text.length);
+        for (const ent of entities) {
+          const value = ent.text.trim();
+          if (!this.isRedactableValue(value)) continue;
+          if (this.decideAction(ent.label, legalProfile) === 'preserve') continue;
+
+          const token = mint(ent.label, value);
+          redactedText = this.replaceOutsideTokens(redactedText, value, token);
+        }
+      } else {
+        console.warn('[redaction] NER pass returned no entities; continuing with local rules.');
+      }
+    } else {
+      console.warn('[redaction] NER unavailable; running local rules only.');
+    }
+
+    // Pass 2 — context-dependent heuristics. Runs before the structural
+    // patterns so a party name containing digits is not partly eaten by one.
     for (const rule of CONTEXT_RULES) {
       if (!policy.contextEntities.includes(rule.name)) continue;
+      if (this.decideAction(rule.name, legalProfile) === 'preserve') continue;
 
       const captured = new Set<string>();
       for (const match of redactedText.matchAll(new RegExp(rule.regex.source, rule.regex.flags))) {
         const value = (match[rule.group] || '').trim().replace(/[.,;:]+$/, '');
-        if (value.length < 2 || ENTITY_STOPWORDS.has(value)) continue;
-        if (value.includes('[') || value.includes(']')) continue; // already tokenized
-        captured.add(value);
+        if (this.isRedactableValue(value)) captured.add(value);
       }
 
-      // Longest first, so "Acme Corp International" is not clipped by "Acme Corp".
       for (const value of [...captured].sort((a, b) => b.length - a.length)) {
         const token = mint(rule.name, value);
-        redactedText = redactedText.split(value).join(token);
+        redactedText = this.replaceOutsideTokens(redactedText, value, token);
       }
     }
 
-    // Pass 2 — structural patterns.
+    // Pass 3 — structural patterns.
     for (const pattern of PATTERNS) {
       if (!policy.regexEntities.includes(pattern.name)) continue;
+      if (this.decideAction(pattern.name, legalProfile) === 'preserve') continue;
 
-      redactedText = redactedText.replace(
-        new RegExp(pattern.regex.source, pattern.regex.flags),
-        (match) => mint(pattern.name, match)
+      redactedText = this.mapOutsideTokens(redactedText, (segment) =>
+        segment.replace(
+          new RegExp(pattern.regex.source, pattern.regex.flags),
+          (match) => mint(pattern.name, match)
+        )
       );
     }
 
@@ -220,6 +273,45 @@ export class RedactionService {
       tokenIndex,
       stats: { totalTokens: Object.keys(tokenMap).length, byEntity }
     };
+  }
+
+  /** Matches an already-minted placeholder token, e.g. `[CLIENT_NAME_001]`. */
+  private static readonly TOKEN_RE = /\[[A-Z_]+_\d{3,}\]/g;
+
+  /** Reject values too generic, too short, or already tokenized. */
+  private isRedactableValue(value: string): boolean {
+    if (value.length < 2) return false;
+    if (ENTITY_STOPWORDS.has(value)) return false;
+    if (value.includes('[') || value.includes(']')) return false;
+    return true;
+  }
+
+  /**
+   * Split `text` into already-tokenized spans and plain spans, apply `fn` to the
+   * plain spans only, and rejoin.
+   *
+   * This is what stops the passes from corrupting each other. Once
+   * `[CLIENT_NAME_001]` is in the text, a later rule matching "Client" or the
+   * digits `001` would otherwise rewrite the inside of that token and leave a
+   * placeholder the vault can never restore.
+   */
+  private mapOutsideTokens(text: string, fn: (segment: string) => string): string {
+    const tokenRe = new RegExp(RedactionService.TOKEN_RE.source, 'g');
+    let out = '';
+    let cursor = 0;
+
+    for (const match of text.matchAll(tokenRe)) {
+      const start = match.index ?? 0;
+      out += fn(text.slice(cursor, start)) + match[0];
+      cursor = start + match[0].length;
+    }
+
+    return out + fn(text.slice(cursor));
+  }
+
+  /** Literal find-and-replace that never touches the inside of an existing token. */
+  private replaceOutsideTokens(text: string, value: string, token: string): string {
+    return this.mapOutsideTokens(text, (segment) => segment.split(value).join(token));
   }
 
   /**
@@ -279,10 +371,15 @@ export class RedactionService {
    * Local gate: confirm no high-confidence PII survived before the redacted text
    * is handed to the graph builder.
    */
-  verify(redactedText: string): { clean: boolean; leaks: Array<{ entity: string; sample: string }> } {
+  verify(redactedText: string, doctype?: string): { clean: boolean; leaks: Array<{ entity: string; sample: string }> } {
     const leaks: Array<{ entity: string; sample: string }> = [];
+    const legalProfile = doctype ? this.resolveLegalProfile(doctype) : null;
 
     for (const pattern of PATTERNS.filter((p) => p.confidence >= 0.9)) {
+      if (legalProfile && legalProfile.preserve.has(pattern.name)) {
+        // Intentionally preserved under legal policy
+        continue;
+      }
       const match = new RegExp(pattern.regex.source, pattern.regex.flags).exec(redactedText);
       if (match) leaks.push({ entity: pattern.name, sample: `${match[0].slice(0, 4)}…` });
     }

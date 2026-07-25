@@ -15,14 +15,14 @@ export interface Redline {
   /** Proposed replacement language (redacted form). */
   proposedText: string;
   /** Why this edit, in founder-facing terms. */
-  rationale: string;
+  reason: string;
   /** What to concede if the counterparty pushes back. */
-  fallbackPosition: string;
+  negotiationPosition: string;
   /** Clause ids that reference this clause and must stay consistent. */
   dependentClauseIds: string[];
   /** Set when a dependent clause would also need editing. */
   dependencyWarning?: string;
-  priority: 'must_fix' | 'should_fix' | 'nice_to_have';
+  priority: 'High' | 'Medium' | 'Low';
 }
 
 export interface CounterProposal {
@@ -39,13 +39,6 @@ export interface CounterProposal {
   restorationWarning?: string;
 }
 
-const PRIORITY_BY_SEVERITY: Record<Severity, Redline['priority']> = {
-  Critical: 'must_fix',
-  High: 'must_fix',
-  Medium: 'should_fix',
-  Low: 'nice_to_have'
-};
-
 const SEVERITY_ORDER: Record<Severity, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 
 const REDLINE_SCHEMA = {
@@ -59,12 +52,13 @@ const REDLINE_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['findingId', 'proposedText', 'rationale', 'fallbackPosition'],
+        required: ['findingId', 'proposedText', 'reason', 'negotiationPosition', 'priority'],
         properties: {
           findingId: { type: 'string' },
           proposedText: { type: 'string' },
-          rationale: { type: 'string' },
-          fallbackPosition: { type: 'string' },
+          reason: { type: 'string' },
+          negotiationPosition: { type: 'string' },
+          priority: { type: 'string', enum: ['High', 'Medium', 'Low'] },
           dependencyWarning: { type: 'string' }
         }
       }
@@ -92,22 +86,21 @@ Token discipline (non-negotiable):
 - Never introduce a new token that did not appear in the input.
 
 Writing redlines:
-- proposedText must be complete, self-contained clause language the user can paste into a document — not an instruction like "add a cap here". Write it in the register of the surrounding contract.
-- Stay close to the original drafting. Change what creates the exposure and leave the rest, so the counterparty's lawyer can see the delta at a glance. A rewrite from scratch reads as hostile and slows the deal.
-- Be commercially realistic. Ask for terms a reasonable counterparty will actually accept, not a maximalist position that stalls the negotiation. Where you ask for something aggressive, make the fallbackPosition a genuine landing zone you would sign.
-- fallbackPosition is the concession you would accept if pushed — specific, not "negotiate further".
-- rationale explains to a non-lawyer founder what the current language could cost them in concrete business terms.
+- proposedText must be complete, self-contained clause language the user can paste into a document.
+- Stay close to the original drafting. A rewrite from scratch reads as hostile.
+- Be commercially realistic. Ask for terms a reasonable counterparty will actually accept.
+- negotiationPosition is the concession you would accept if pushed.
+- reason explains the business rationale for the proposed change.
+- Priority should be "High", "Medium", or "Low" based on the business impact of the clause.
 
 Dependency awareness:
-- You are given the clause dependency edges. Before proposing an edit, check whether other clauses reference the one you are changing.
-- If your edit would break a defined term, a cross-reference, or a linked obligation elsewhere, set dependencyWarning naming the affected clause ids and what else needs to change. This is the single most valuable thing you provide over a generic redline tool — a cap you fix in one clause that a carve-out reinstates in another is not fixed.
+- Before proposing an edit, check whether other clauses reference the one you are changing.
+- If your edit would break a defined term, set dependencyWarning.
 
 The negotiation email:
-- Address it to the counterparty's commercial contact, not their legal team.
-- Open by confirming intent to move forward — the tone is "we want to sign, here is what we need", not a list of complaints.
-- Group asks by priority. Lead with the must-fix items and give a one-line business reason for each. Do not paste full clause text into the email; reference the section and summarize the ask.
-- Keep it under roughly 400 words. Professional, warm, direct. No legal threats, no apologies, no hedging.
-- Signal flexibility on the lower-priority items explicitly — it makes the must-fix items read as genuine constraints rather than opening positions.`;
+- Address it to the counterparty's commercial contact.
+- Group asks by priority (High, Medium, Low). Lead with the High priority items and give a one-line business reason for each. Reference the section number (if available) or clause title.
+- Keep it professional, warm, direct.`;
 
 @Injectable()
 export class RedlineService {
@@ -116,7 +109,7 @@ export class RedlineService {
     private graphService: GraphService,
     private redactionService: RedactionService,
     private llm: LlmService
-  ) {}
+  ) { }
 
   /**
    * Aggregate agent findings into a counter-proposal.
@@ -138,7 +131,8 @@ export class RedlineService {
     );
 
     // --- Redacted phase: everything below runs on placeholder tokens only. ---
-    const llmResult = await this.draftWithLlm(graphId, findings);
+    // Optimize latency: route top 8 highest-priority findings to LLM for deep redlines, assemble rest heuristically.
+    const llmResult = await this.draftWithLlm(graphId, findings.slice(0, 8));
 
     let redlines: Redline[];
     let summary: string;
@@ -192,23 +186,23 @@ export class RedlineService {
       };
     }
 
-    const sub = (text: string) => this.redactionService.restore(text, sessionId).restoredText;
+    const sub = (text?: string) => text ? this.redactionService.restore(text, sessionId).restoredText : '';
 
     return {
       ...proposal,
       restored: true,
       summary: sub(proposal.summary),
-      redlines: proposal.redlines.map((r) => ({
+      redlines: (proposal.redlines || []).map((r) => ({
         ...r,
         originalText: sub(r.originalText),
         proposedText: sub(r.proposedText),
-        rationale: sub(r.rationale),
-        fallbackPosition: sub(r.fallbackPosition),
+        reason: sub(r.reason),
+        negotiationPosition: sub(r.negotiationPosition),
         dependencyWarning: r.dependencyWarning ? sub(r.dependencyWarning) : undefined
       })),
       negotiationEmail: {
-        subject: sub(proposal.negotiationEmail.subject),
-        body: sub(proposal.negotiationEmail.body)
+        subject: sub(proposal.negotiationEmail?.subject),
+        body: sub(proposal.negotiationEmail?.body)
       }
     };
   }
@@ -236,8 +230,9 @@ export class RedlineService {
     redlines: Array<{
       findingId: string;
       proposedText: string;
-      rationale: string;
-      fallbackPosition: string;
+      reason: string;
+      negotiationPosition: string;
+      priority: 'High' | 'Medium' | 'Low';
       dependencyWarning?: string;
     }>;
     negotiationEmail: { subject: string; body: string };
@@ -248,8 +243,9 @@ export class RedlineService {
       .map((f) => {
         const deps = f.clauseId ? this.graphService.dependents(graphId, f.clauseId) : [];
         return `<finding id="${f.id}" agent="${f.agent}" severity="${f.severity}" category="${f.category}">
-title: ${f.title}
-problem: ${f.description}
+issue: ${f.issue}
+business impact: ${f.businessImpact}
+legal reason: ${f.legalReason}
 agent recommendation: ${f.recommendation}
 clause id: ${f.clauseId ?? 'unanchored'}
 clauses that reference this one: ${deps.length ? deps.join(', ') : 'none'}
@@ -280,7 +276,7 @@ Return the summary (2–4 sentences a founder can read before a call), one redli
     graphId: string,
     finding: Finding,
     drafted:
-      | { proposedText: string; rationale: string; fallbackPosition: string; dependencyWarning?: string }
+      | { findingId?: string; proposedText: string; reason: string; negotiationPosition: string; priority?: 'High' | 'Medium' | 'Low'; dependencyWarning?: string }
       | undefined
   ): Redline {
     const dependents = finding.clauseId
@@ -300,16 +296,16 @@ Return the summary (2–4 sentences a founder can read before a call), one redli
       clauseId: finding.clauseId,
       severity: finding.severity,
       category: finding.category,
-      title: finding.title,
+      title: finding.clauseTitle || 'Missing Clause',
       originalText: finding.clause,
       proposedText: drafted?.proposedText ?? `[Suggested change] ${finding.recommendation}`,
-      rationale: drafted?.rationale ?? finding.description,
-      fallbackPosition:
-        drafted?.fallbackPosition ??
+      reason: drafted?.reason ?? finding.businessImpact,
+      negotiationPosition:
+        drafted?.negotiationPosition ??
         'No fallback drafted locally — review with counsel before conceding this point.',
       dependentClauseIds: dependents,
       dependencyWarning,
-      priority: PRIORITY_BY_SEVERITY[finding.severity]
+      priority: drafted?.priority ?? (finding.severity === 'Critical' || finding.severity === 'High' ? 'High' : (finding.severity === 'Medium' ? 'Medium' : 'Low'))
     };
   }
 
@@ -330,18 +326,18 @@ Return the summary (2–4 sentences a founder can read before a call), one redli
     return `Analysis surfaced ${findings.length} finding${findings.length === 1 ? '' : 's'} (${parts.join(', ')}), with an aggregate risk score of ${score}/100. The must-fix items are ${findings
       .filter((f) => f.severity === 'Critical' || f.severity === 'High')
       .slice(0, 3)
-      .map((f) => f.title.toLowerCase())
+      .map((f) => (f.issue || f.clauseTitle || 'unspecified risk').toLowerCase())
       .join('; ') || 'none'}. Redlines below were drafted locally from the rules engine; review each before sending.`;
   }
 
   private templateEmail(redlines: Redline[]): { subject: string; body: string } {
     const group = (p: Redline['priority']) => redlines.filter((r) => r.priority === p);
     const bullet = (r: Redline) =>
-      `- ${r.category}${r.clauseId ? ` (clause ${r.clauseId})` : ''}: ${r.title}. ${r.rationale.split('. ')[0]}.`;
+      `- ${r.category}${r.clauseId ? ` (clause ${r.clauseId})` : ''}: ${r.title || 'Clause update'}. ${(r.reason || 'Recommended revision').split('. ')[0]}.`;
 
-    const mustFix = group('must_fix');
-    const shouldFix = group('should_fix');
-    const niceToHave = group('nice_to_have');
+    const mustFix = group('High');
+    const shouldFix = group('Medium');
+    const niceToHave = group('Low');
 
     const sections: string[] = [
       'Hi [CLIENT_NAME],',

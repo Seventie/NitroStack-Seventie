@@ -1,10 +1,5 @@
 import { Injectable } from '@nitrostack/core';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { loadDataJson } from '../../common/data-path.js';
 
 @Injectable()
 export class BenchmarkService {
@@ -15,13 +10,9 @@ export class BenchmarkService {
   }
 
   private loadBenchmarks() {
-    try {
-      const p = path.resolve(__dirname, '../../data/benchmarks.json');
-      if (fs.existsSync(p)) {
-        this.benchmarks = JSON.parse(fs.readFileSync(p, 'utf8'));
-      }
-    } catch (e) {
-      console.warn("Could not load benchmarks", e);
+    this.benchmarks = loadDataJson<any[]>('benchmarks.json', []);
+    if (this.benchmarks.length === 0) {
+      console.warn('[benchmark] No benchmark corpus loaded — benchmark_clause will return not-found.');
     }
   }
 

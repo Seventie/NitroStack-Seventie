@@ -4,22 +4,20 @@ import { RedactionModule } from './modules/redaction/redaction.module.js';
 import { GraphModule } from './modules/graph/graph.module.js';
 import { RiskModule } from './modules/risk/risk.module.js';
 import { BenchmarkModule } from './modules/benchmark/benchmark.module.js';
+import { PipelineModule } from './modules/pipeline/pipeline.module.js';
 import { ContractResources } from './resources/contract.resources.js';
 
 // ─── Root module: all feature modules wired together ────────────────────────
 @Module({
   name: 'phalanx-app',
-  imports: [IngestionModule, RedactionModule, GraphModule, RiskModule, BenchmarkModule],
+  imports: [IngestionModule, RedactionModule, GraphModule, RiskModule, BenchmarkModule, PipelineModule],
   providers: [ContractResources],
   controllers: []
 })
-export class RootModule {}
+export class AppLogicModule {}
 
-// ─── App entry: @McpApp points to RootModule, enables HTTP transport ─────────
 @McpApp({
-  module: RootModule,
-  server: { name: 'phalanx', version: '1.0.0' },
-  transport: { type: 'http', http: { port: 3000 } },
-  logging: { level: 'debug' }
+  module: AppLogicModule,
+  server: { name: 'phalanx-server', version: '1.0.0' }
 })
 export class AppModule {}
