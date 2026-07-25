@@ -1,0 +1,36 @@
+{
+  "name": "phalanx",
+  "version": "1.0.0",
+  "description": "Phalanx — AI Contract Risk Analyst MCP Server built on NitroStack",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "npx nitrostack dev",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "studio": "npx nitrostack dev --studio"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@nitrostack/core": "latest",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "graphology": "^0.25.4",
+    "graphology-types": "^0.24.7",
+    "mammoth": "^1.8.0",
+    "multer": "^2.2.0",
+    "pdf-parse": "^1.1.1",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.5.0"
+  }
+}

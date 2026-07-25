@@ -1,0 +1,144 @@
+{
+  "saas_msa": {
+    "label": "SaaS Master Services Agreement",
+    "description": "Scrub commercial terms and contact PII. Preserve legal entity names' structural role via tokens so the graph can still reason about parties.",
+    "regexEntities": [
+      "EMAIL_ADDRESS",
+      "PHONE_NUMBER",
+      "US_SSN",
+      "PAN",
+      "AADHAAR",
+      "CREDIT_CARD",
+      "IBAN",
+      "BANK_ACCOUNT",
+      "IP_ADDRESS",
+      "URL",
+      "MONEY",
+      "PERCENTAGE"
+    ],
+    "contextEntities": [
+      "CLIENT_NAME",
+      "VENDOR_NAME",
+      "ACV_VALUE",
+      "JURISDICTION",
+      "SIGNATORY_NAME"
+    ],
+    "preserve": [
+      "governing law clause headings",
+      "notice periods",
+      "liability cap multipliers expressed as 'X months of fees'"
+    ]
+  },
+  "enterprise_agreement": {
+    "label": "Enterprise Agreement",
+    "description": "Enterprise paper carries procurement identifiers and named security contacts. Scrub those plus all commercials.",
+    "regexEntities": [
+      "EMAIL_ADDRESS",
+      "PHONE_NUMBER",
+      "US_SSN",
+      "PAN",
+      "AADHAAR",
+      "CREDIT_CARD",
+      "IBAN",
+      "BANK_ACCOUNT",
+      "IP_ADDRESS",
+      "URL",
+      "MONEY",
+      "PERCENTAGE",
+      "PO_NUMBER"
+    ],
+    "contextEntities": [
+      "CLIENT_NAME",
+      "VENDOR_NAME",
+      "ACV_VALUE",
+      "JURISDICTION",
+      "SIGNATORY_NAME",
+      "SECURITY_CONTACT",
+      "AFFILIATE_NAME"
+    ],
+    "preserve": [
+      "SLA percentages expressed as uptime targets",
+      "audit rights language",
+      "termination notice windows"
+    ]
+  },
+  "nda": {
+    "label": "Non-Disclosure Agreement",
+    "description": "NDAs leak trade secrets and project code names. Scrub proprietary identifiers aggressively; commercials are usually absent.",
+    "regexEntities": [
+      "EMAIL_ADDRESS",
+      "PHONE_NUMBER",
+      "US_SSN",
+      "PAN",
+      "AADHAAR",
+      "IP_ADDRESS",
+      "URL"
+    ],
+    "contextEntities": [
+      "CLIENT_NAME",
+      "VENDOR_NAME",
+      "JURISDICTION",
+      "SIGNATORY_NAME",
+      "PROJECT_CODENAME",
+      "TRADE_SECRET"
+    ],
+    "preserve": [
+      "confidentiality term duration",
+      "residual knowledge carve-outs",
+      "permitted disclosure list"
+    ]
+  },
+  "dpa": {
+    "label": "Data Processing Agreement",
+    "description": "DPAs enumerate sub-processors and data categories. Scrub named sub-processors and transfer endpoints; keep the regulatory scaffolding intact.",
+    "regexEntities": [
+      "EMAIL_ADDRESS",
+      "PHONE_NUMBER",
+      "IP_ADDRESS",
+      "URL",
+      "US_SSN",
+      "AADHAAR",
+      "PAN"
+    ],
+    "contextEntities": [
+      "CLIENT_NAME",
+      "VENDOR_NAME",
+      "JURISDICTION",
+      "SIGNATORY_NAME",
+      "SUBPROCESSOR_NAME",
+      "DPO_NAME",
+      "DATA_CENTER_LOCATION"
+    ],
+    "preserve": [
+      "GDPR / CCPA article references",
+      "breach notification windows",
+      "data subject request turnaround times",
+      "standard contractual clause module numbers"
+    ]
+  },
+  "general_contract": {
+    "label": "General Contract",
+    "description": "Conservative default policy — scrub everything structurally detectable.",
+    "regexEntities": [
+      "EMAIL_ADDRESS",
+      "PHONE_NUMBER",
+      "US_SSN",
+      "PAN",
+      "AADHAAR",
+      "CREDIT_CARD",
+      "IBAN",
+      "BANK_ACCOUNT",
+      "IP_ADDRESS",
+      "URL",
+      "MONEY",
+      "PERCENTAGE"
+    ],
+    "contextEntities": [
+      "CLIENT_NAME",
+      "VENDOR_NAME",
+      "JURISDICTION",
+      "SIGNATORY_NAME"
+    ],
+    "preserve": []
+  }
+}

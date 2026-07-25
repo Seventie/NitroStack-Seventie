@@ -1,0 +1,5 @@
+{
+  "employment_contract": ["SSN", "PHONE_NUMBER", "EMAIL_ADDRESS", "PAN", "AADHAAR", "DATE"],
+  "vendor_agreement": ["CREDIT_CARD", "PAN", "IP_ADDRESS"],
+  "nda": ["EMAIL_ADDRESS", "PHONE_NUMBER"]
+}
