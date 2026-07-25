@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "npx nitrostack dev",
-    "build": "tsc",
+    "build": "tsc && node --input-type=module -e \"import fs from 'fs'; fs.cpSync('src/data','dist/data',{recursive:true})\"",
     "start": "node dist/index.js",
     "studio": "npx nitrostack dev --studio"
   },
@@ -23,6 +23,7 @@
     "graphology-types": "^0.24.7",
     "mammoth": "^1.8.0",
     "multer": "^2.2.0",
+    "openai": "^6.49.0",
     "pdf-parse": "^1.1.1",
     "uuid": "^10.0.0",
     "zod": "^3.23.0"

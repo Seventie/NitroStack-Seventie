@@ -12,7 +12,7 @@ export default function PhaseStepper({ currentPhase, fileName }) {
       <h2 style={{ marginTop: 0, marginBottom: '2rem' }}>
         Processing <span className="mono" style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{fileName}</span>
       </h2>
-      
+
       <div className="phases">
         {phases.map((phase) => {
           let statusClass = 'pending';

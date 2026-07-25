@@ -132,13 +132,16 @@ const EXTRACTION_SCHEMA = {
 
 const GRAPH_BUILDER_SYSTEM = `You are a contract structuring engine. You convert a commercial contract into a clause-level knowledge graph that downstream risk agents will query.
 
-The text you receive has ALREADY been redacted. Sensitive values appear as bracketed placeholder tokens such as [CLIENT_NAME_001], [ACV_VALUE_004], [JURISDICTION_002], [MONEY_011]. These tokens are first-class entities:
-- Treat each distinct token as a stable identifier for one real-world value.
-- Reproduce tokens exactly, character for character, wherever they appear.
-- Never guess, infer, invent, or paraphrase what a token might stand for. Do not write "likely the customer" or "probably a US state".
-- If a clause's meaning genuinely depends on a redacted value you cannot see, extract the clause anyway and describe the dependency structurally.
+The text you receive has ALREADY been redacted. Some sensitive values appear as bracketed placeholder tokens such as [CLIENT_NAME_001] or [PHONE_NUMBER_002]. Other values (like money or jurisdictions) may have been preserved and will appear as normal text.
 
 Rules for extraction:
+- ONLY extract bracketed tokens that ACTUALLY EXIST in the provided text.
+- DO NOT invent, hallucinate, or create new bracketed tokens (e.g., do not output [MONEY_001] or [JURISDICTION_001] unless that exact string literally appears in the text).
+- If a value appears as normal text (e.g., "$5,200.00" or "State of California"), extract that exact normal text as the entity label. Do not convert it into a bracketed token.
+- Treat each distinct token or extracted value as a stable identifier for one real-world value.
+- If a clause's meaning genuinely depends on a redacted value you cannot see, extract the clause anyway and describe the dependency structurally.
+
+Rules for nodes and edges:
 1. One clause node per operative provision. Split a numbered section into multiple clauses when it contains genuinely separate obligations; do not split a single obligation across nodes.
 2. Copy clause 'text' verbatim from the input. Do not summarize, reword, or clean it up. Truncate only if a clause exceeds roughly 1200 characters, and mark the truncation with a trailing ellipsis.
 3. Assign exactly one category per clause, from the allowed enum. Use 'other' only when no category fits.
