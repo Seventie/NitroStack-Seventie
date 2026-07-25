@@ -11,7 +11,7 @@
     "studio": "npx nitrostack dev --studio"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.115.0",
+    "@google/generative-ai": "^0.24.1",
     "@nitrostack/core": "latest",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

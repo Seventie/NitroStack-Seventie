@@ -7,7 +7,7 @@ export class ContractResources {
     description: 'Knowledge graph of contract clauses',
     mimeType: 'application/json'
   })
-  async getGraph(uri: string, ctx: ExecutionContext) {
+  async getGraph(uri: string, _ctx: ExecutionContext) {
     // In a real application, this would fetch the graph for the specific contract ID.
     // For now, returning a placeholder empty graph.
     const data = { nodes: [], edges: [] };
@@ -20,7 +20,7 @@ export class ContractResources {
     description: 'Risk findings for the contract',
     mimeType: 'application/json'
   })
-  async getRisks(uri: string, ctx: ExecutionContext) {
+  async getRisks(uri: string, _ctx: ExecutionContext) {
     // Placeholder risk data
     const data = { findings: [], totalScore: 0 };
     return { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(data) }] };

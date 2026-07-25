@@ -1,4 +1,4 @@
-import { McpApp, Module } from '@nitrostack/core';
+import { Module } from '@nitrostack/core';
 import { IngestionModule } from './modules/ingestion/ingestion.module.js';
 import { RedactionModule } from './modules/redaction/redaction.module.js';
 import { GraphModule } from './modules/graph/graph.module.js';
