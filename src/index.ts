@@ -11,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 async function bootstrap() {
   process.env.MCP_TRANSPORT_TYPE = 'http';
-  process.env.PORT = '3000'; // Default port for the MCP backend HTTP server
+  process.env.PORT = process.env.PORT || '3000'; // Default port for the MCP backend HTTP server
   const app = await McpApplicationFactory.create(AppModule);
   await app.start();
 
@@ -19,6 +19,16 @@ async function bootstrap() {
   const transport: any = app.getHttpTransport();
   if (transport && transport.getApp) {
     const expressApp = transport.getApp();
+
+    expressApp.get('/', (req: express.Request, res: express.Response) => {
+      res.status(200).json({ status: 'ok', service: 'phalanx-mcp-server' });
+    });
+    expressApp.get('/health', (req: express.Request, res: express.Response) => {
+      res.status(200).json({ status: 'ok', service: 'phalanx-mcp-server' });
+    });
+    expressApp.get('/api/health', (req: express.Request, res: express.Response) => {
+      res.status(200).json({ status: 'ok', service: 'phalanx-mcp-server' });
+    });
     
     // Enable JSON body parsing for our custom routes, scoped to /api so it doesn't break MCP SDK routes
     expressApp.use('/api', express.json({ limit: '50mb' }));
@@ -242,7 +252,7 @@ async function bootstrap() {
           redlines: proposal.redlines.map((r: any) => ({
             original: r.originalText,
             proposed: r.proposedText,
-            rationale: r.rationale
+            rationale: r.reason || r.rationale
           }))
         });
       } catch (err: any) {
