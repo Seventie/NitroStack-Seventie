@@ -73,6 +73,8 @@ export class PipelineTools {
       scoreBreakdown: analysis.scoreBreakdown,
       strengths: analysis.strengths,
       summary: proposal.summary,
+      negotiationEmail: proposal.negotiationEmail,
+      redlines: proposal.redlines,
       findings: analysis.findings.map((finding: any) => {
         const redline = proposal.redlines.find((r: any) => r.findingId === finding.id) ?? null;
         return {
