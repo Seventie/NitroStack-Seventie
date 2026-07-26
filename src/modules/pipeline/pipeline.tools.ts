@@ -73,6 +73,7 @@ export class PipelineTools {
       scoreBreakdown: analysis.scoreBreakdown,
       strengths: analysis.strengths,
       summary: proposal.summary,
+      // Include negotiation email and redline recommendations in final pipeline output
       negotiationEmail: proposal.negotiationEmail,
       redlines: proposal.redlines,
       findings: analysis.findings.map((finding: any) => {
