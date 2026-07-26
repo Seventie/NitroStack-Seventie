@@ -56,25 +56,33 @@ export class PipelineTools {
       sessionId
     );
 
-    ctx.logger.info('[Step 4/4] Running all 4 specialized Risk Agents concurrently');
+    ctx.logger.info('[Step 4/5] Running all 4 specialized Risk Agents concurrently');
     const analysis = await this.riskService.runAllAgents(graph.graphId);
+
+    ctx.logger.info('[Step 5/5] Synthesizing redlines and the negotiation email');
+    const proposal = await this.redlineService.synthesize(graph.graphId, sessionId, {
+      findings: analysis.findings,
+      restore: true
+    });
 
     const responsePayload = {
       documentId: graph.graphId,
       sessionId,
       contractType,
-      riskScore: analysis.totalScore,
+      riskScore: proposal.riskScore,
       scoreBreakdown: analysis.scoreBreakdown,
       strengths: analysis.strengths,
-      summary: 'Automated multi-agent risk analysis completed successfully.',
+      summary: proposal.summary,
       findings: analysis.findings.map((finding: any) => {
+        const redline = proposal.redlines.find((r: any) => r.findingId === finding.id) ?? null;
         return {
           agent: finding.agent,
           severity: finding.severity,
           category: finding.category,
           title: finding.issue,
           businessImpact: finding.businessImpact,
-          recommendation: finding.recommendation
+          recommendation: finding.recommendation,
+          redline: redline ? { proposed: redline.proposedText, reason: redline.reason } : null
         };
       })
     };
