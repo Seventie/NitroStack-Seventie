@@ -1,0 +1,544 @@
+{
+  "documentId": "graph_98c3aeb3b72f",
+  "sessionId": "sess_1785023790647",
+  "fileName": "sample-contract.txt",
+  "contractType": "general_contract",
+  "policyLabel": "General Contract",
+  "pageCount": 1,
+  "processingTime": "23.6s",
+  "analysisSource": "llm",
+  "restored": true,
+  "restorationWarning": null,
+  "redaction": {
+    "tokenCount": 18,
+    "byEntity": {
+      "EMAIL_ADDRESS": 2,
+      "CREDIT_CARD": 2,
+      "AADHAAR": 2,
+      "US_SSN": 2,
+      "PAN": 2,
+      "IP_ADDRESS": 2,
+      "PHONE_NUMBER": 2,
+      "SIGNATORY_NAME": 2,
+      "CLIENT_NAME": 2
+    },
+    "verified": true,
+    "leaks": []
+  },
+  "riskScore": 100,
+  "scoreBreakdown": {
+    "Corporate Due-Diligence Agent": 75,
+    "Financial & Renewal Risk Agent": 4,
+    "Liability & Indemnification Agent": 65,
+    "Privacy & Compliance Agent": 6
+  },
+  "strengths": [
+    "Confidentiality clause exists (Employee Information clause)",
+    "Confidentiality clause exists"
+  ],
+  "summary": "We've identified several critical issues in the contract that require immediate attention. These include the collection of sensitive personal data without consent, uncapped liability for direct damages, and unclear liability and risk exposure for the contracting entity. We've drafted redlines to address these issues and are ready to discuss them further.",
+  "graph": {
+    "graphId": "graph_98c3aeb3b72f",
+    "nodeCount": 16,
+    "edgeCount": 10,
+    "categories": {
+      "parties": 1,
+      "other": 1,
+      "liability": 1,
+      "governing_law": 1,
+      "confidentiality": 1,
+      "payment": 1
+    },
+    "nodes": [
+      {
+        "key": "c1",
+        "attributes": {
+          "label": "Employee Information",
+          "category": "parties",
+          "kind": "clause",
+          "text": "Employee Information:\nEmail: john.doe@email.com\nPhone: +91 9876543210\nAadhaar: 1234 5678 9012\nPAN: ABCDE1234F\nSSN: 123-45-6789"
+        }
+      },
+      {
+        "key": "c2",
+        "attributes": {
+          "label": "Position and Duties",
+          "category": "other",
+          "kind": "clause",
+          "text": "Employee will serve as Software Engineer."
+        }
+      },
+      {
+        "key": "c3",
+        "attributes": {
+          "label": "Limitation of Liability",
+          "category": "liability",
+          "kind": "clause",
+          "text": "Limitation of Liability\nThe Company shall have no liability for any indirect, special, incidental, or consequential damages."
+        }
+      },
+      {
+        "key": "c4",
+        "attributes": {
+          "label": "Governing Law",
+          "category": "governing_law",
+          "kind": "clause",
+          "text": "This Agreement shall be governed by the laws of California."
+        }
+      },
+      {
+        "key": "c5",
+        "attributes": {
+          "label": "Confidentiality Clause",
+          "category": "confidentiality",
+          "kind": "clause",
+          "text": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties."
+        }
+      },
+      {
+        "key": "c6",
+        "attributes": {
+          "label": "Payment",
+          "category": "payment",
+          "kind": "clause",
+          "text": "Payment via Credit Card 1234-5678-9012-3456 is accepted."
+        }
+      },
+      {
+        "key": "e1",
+        "attributes": {
+          "label": "Acme Corp",
+          "category": "party",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e2",
+        "attributes": {
+          "label": "John Doe",
+          "category": "party",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e3",
+        "attributes": {
+          "label": "john.doe@email.com",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e4",
+        "attributes": {
+          "label": "+91 9876543210",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e5",
+        "attributes": {
+          "label": "1234 5678 9012",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e6",
+        "attributes": {
+          "label": "ABCDE1234F",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e7",
+        "attributes": {
+          "label": "123-45-6789",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e8",
+        "attributes": {
+          "label": "Liability\nThe Company",
+          "category": "party",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e9",
+        "attributes": {
+          "label": "192.168.1.1",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      },
+      {
+        "key": "e10",
+        "attributes": {
+          "label": "1234-5678-9012-3456",
+          "category": "other",
+          "kind": "entity",
+          "text": ""
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "c1",
+        "target": "e1",
+        "relation": "obligates"
+      },
+      {
+        "source": "c1",
+        "target": "e2",
+        "relation": "obligates"
+      },
+      {
+        "source": "c1",
+        "target": "e3",
+        "relation": "benefits"
+      },
+      {
+        "source": "c1",
+        "target": "e4",
+        "relation": "benefits"
+      },
+      {
+        "source": "c1",
+        "target": "e5",
+        "relation": "benefits"
+      },
+      {
+        "source": "c1",
+        "target": "e6",
+        "relation": "benefits"
+      },
+      {
+        "source": "c1",
+        "target": "e7",
+        "relation": "benefits"
+      },
+      {
+        "source": "c3",
+        "target": "e8",
+        "relation": "obligates"
+      },
+      {
+        "source": "c5",
+        "target": "e9",
+        "relation": "defines"
+      },
+      {
+        "source": "c6",
+        "target": "e10",
+        "relation": "defines"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "corporate_1",
+      "agent": "corporate",
+      "severity": "Critical",
+      "category": "party identification",
+      "title": "SSN and PAN are collected, but no explicit consent or purpose is stated.",
+      "issue": "SSN and PAN are collected, but no explicit consent or purpose is stated.",
+      "businessImpact": "Potential unauthorized use of personal data, including SSN and PAN.",
+      "legalReason": "Lack of explicit consent and purpose for collecting sensitive personal data.",
+      "clause": "Employee Information:\nEmail: [EMAIL_ADDRESS_001]\nPhone: [PHONE_NUMBER_007]\nAadhaar: [AADHAAR_003]\nPAN: [PAN_005]\nSSN: [US_SSN_004]",
+      "clauseTitle": "Employee Information",
+      "clauseId": "c1",
+      "page": null,
+      "confidence": 0.9,
+      "recommendation": "Add explicit consent and purpose for collecting SSN and PAN.",
+      "redline": {
+        "proposed": "Employee Information: Email: john.doe@email.com, Phone: +91 9876543210, Aadhaar: 1234 5678 9012, PAN: ABCDE1234F, SSN: 123-45-6789. The Company shall obtain explicit consent from the Employee for the collection and use of their personal data, including SSN and PAN, and shall specify the purpose for which the data is being collected.",
+        "reason": "To ensure compliance with data protection regulations and protect the Employee's sensitive personal data.",
+        "negotiationPosition": "Explicit consent and purpose for collecting SSN and PAN.",
+        "priority": "High",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "liability_1",
+      "agent": "liability",
+      "severity": "Critical",
+      "category": "liability",
+      "title": "No liability cap for direct damages",
+      "issue": "No liability cap for direct damages",
+      "businessImpact": "Uncapped liability for direct damages can exceed the company's entire enterprise value",
+      "legalReason": "The clause explicitly states that [CLIENT_NAME_017] shall have no liability for any indirect, special, incidental, or consequential damages, but does not mention a cap for direct damages",
+      "clause": "Limitation of [CLIENT_NAME_017] shall have no liability for any indirect, special, incidental, or consequential damages.",
+      "clauseTitle": "Limitation of Liability",
+      "clauseId": "c3",
+      "page": null,
+      "confidence": 0.9,
+      "recommendation": "Negotiate a liability cap for direct damages",
+      "redline": {
+        "proposed": "Limitation of Liability\nThe Company shall have a liability cap of [MONEY_014] for direct damages.",
+        "reason": "To mitigate the risk of uncapped liability for direct damages.",
+        "negotiationPosition": "A liability cap of [MONEY_014] for direct damages.",
+        "priority": "High",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "corporate_2",
+      "agent": "corporate",
+      "severity": "High",
+      "category": "party identification",
+      "title": "No clear indication that the contracting entity is the operating company or a thinly-capitalized subsidiary.",
+      "issue": "No clear indication that the contracting entity is the operating company or a thinly-capitalized subsidiary.",
+      "businessImpact": "Unclear liability and risk exposure for the contracting entity.",
+      "legalReason": "Lack of clear entity identification and potential for misaligned liability.",
+      "clause": "Employee Information:\nEmail: [EMAIL_ADDRESS_001]\nPhone: [PHONE_NUMBER_007]\nAadhaar: [AADHAAR_003]\nPAN: [PAN_005]\nSSN: [US_SSN_004]",
+      "clauseTitle": "Employee Information",
+      "clauseId": "c1",
+      "page": null,
+      "confidence": 0.8,
+      "recommendation": "Clarify the contracting entity's identity and liability structure.",
+      "redline": {
+        "proposed": "The contracting entity is [CLIENT_NAME_001], a [JURISDICTION_002] company with [ACV_VALUE_003] in capital.",
+        "reason": "To clarify the contracting entity's identity and liability structure.",
+        "negotiationPosition": "The contracting entity is [CLIENT_NAME_001], a [JURISDICTION_002] company with [ACV_VALUE_003] in capital.",
+        "priority": "High",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "liability_2",
+      "agent": "liability",
+      "severity": "High",
+      "category": "liability",
+      "title": "Exclusion of consequential damages",
+      "issue": "Exclusion of consequential damages",
+      "businessImpact": "Exclusion of consequential damages may limit recovery for unforeseen losses",
+      "legalReason": "The clause excludes indirect, special, incidental, or consequential damages, which may limit recovery for unforeseen losses",
+      "clause": "Limitation of [CLIENT_NAME_017] shall have no liability for any indirect, special, incidental, or consequential damages.",
+      "clauseTitle": "Limitation of Liability",
+      "clauseId": "c3",
+      "page": null,
+      "confidence": 0.8,
+      "recommendation": "Negotiate to include consequential damages in the liability scope",
+      "redline": {
+        "proposed": "Limitation of Liability\nThe Company shall have liability for indirect, special, incidental, and consequential damages, up to a maximum of [MONEY_014].",
+        "reason": "To include consequential damages in the liability scope.",
+        "negotiationPosition": "Liability for indirect, special, incidental, and consequential damages, up to a maximum of [MONEY_014].",
+        "priority": "Medium",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "corporate_3",
+      "agent": "corporate",
+      "severity": "Medium",
+      "category": "governing law",
+      "title": "Governing law is California, but no indication of jurisdiction for disputes.",
+      "issue": "Governing law is California, but no indication of jurisdiction for disputes.",
+      "businessImpact": "Potential for costly and time-consuming disputes in California courts.",
+      "legalReason": "Lack of jurisdiction specification for disputes.",
+      "clause": "This Agreement shall be governed by the laws of California.",
+      "clauseTitle": "Governing Law",
+      "clauseId": "c4",
+      "page": null,
+      "confidence": 0.7,
+      "recommendation": "Specify the jurisdiction for disputes.",
+      "redline": {
+        "proposed": "This Agreement shall be governed by the laws of [JURISDICTION_002] and any disputes arising from this Agreement shall be resolved in the courts of [JURISDICTION_002].",
+        "reason": "To specify the jurisdiction for disputes.",
+        "negotiationPosition": "The jurisdiction for disputes is [JURISDICTION_002].",
+        "priority": "Medium",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "financial_1",
+      "agent": "financial",
+      "severity": "Low",
+      "category": "payment",
+      "title": "Payment method is not specified, relying on [CREDIT_CARD_002]",
+      "issue": "Payment method is not specified, relying on [CREDIT_CARD_002]",
+      "businessImpact": "Unclear payment method may lead to confusion or disputes",
+      "legalReason": "Clause c6 does not specify the payment method, relying on the token [CREDIT_CARD_002]",
+      "clause": "Payment via Credit Card [CREDIT_CARD_002] is accepted.",
+      "clauseTitle": "Payment",
+      "clauseId": "c6",
+      "page": null,
+      "confidence": 0.8,
+      "recommendation": "Specify the payment method in the contract",
+      "redline": {
+        "proposed": "Payment via Credit Card 1234-5678-9012-3456 is accepted. The Company shall specify the payment method in the contract.",
+        "reason": "To clarify the payment method.",
+        "negotiationPosition": "Specify the payment method in the contract.",
+        "priority": "Low",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "privacy_1",
+      "agent": "privacy",
+      "severity": "Low",
+      "category": "confidentiality",
+      "title": "IP address disclosure restriction is limited to third parties, but does not address disclosure to the obligee itself.",
+      "issue": "IP address disclosure restriction is limited to third parties, but does not address disclosure to the obligee itself.",
+      "businessImpact": "The company may not be able to control the disclosure of IP addresses to its own employees or partners.",
+      "legalReason": "The clause only prohibits disclosure to third parties, not to the obligee.",
+      "clause": "The Employee agrees not to disclose IP addresses such as [IP_ADDRESS_006] to third parties.",
+      "clauseTitle": "Confidentiality Clause",
+      "clauseId": "c5",
+      "page": null,
+      "confidence": 0.8,
+      "recommendation": "Consider adding a provision to restrict disclosure of IP addresses to the obligee as well.",
+      "redline": {
+        "proposed": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties or to the obligee.",
+        "reason": "To restrict disclosure of IP addresses to the obligee as well.",
+        "negotiationPosition": "Restrict disclosure of IP addresses to the obligee as well.",
+        "priority": "Low",
+        "dependencyWarning": null
+      }
+    },
+    {
+      "id": "privacy_2",
+      "agent": "privacy",
+      "severity": "Low",
+      "category": "confidentiality",
+      "title": "The clause does not specify the duration of the confidentiality obligation.",
+      "issue": "The clause does not specify the duration of the confidentiality obligation.",
+      "businessImpact": "The company may not be able to determine when the confidentiality obligation ends.",
+      "legalReason": "The clause does not include a termination date or a specific duration.",
+      "clause": "The Employee agrees not to disclose IP addresses such as [IP_ADDRESS_006] to third parties.",
+      "clauseTitle": "Confidentiality Clause",
+      "clauseId": "c5",
+      "page": null,
+      "confidence": 0.7,
+      "recommendation": "Consider adding a provision to specify the duration of the confidentiality obligation.",
+      "redline": {
+        "proposed": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties or to the obligee, for a period of [TIME_PERIOD_008] from the date of this Agreement.",
+        "reason": "To specify the duration of the confidentiality obligation.",
+        "negotiationPosition": "Specify the duration of the confidentiality obligation.",
+        "priority": "Low",
+        "dependencyWarning": null
+      }
+    }
+  ],
+  "redlines": [
+    {
+      "findingId": "corporate_1",
+      "clauseId": "c1",
+      "title": "Employee Information",
+      "severity": "Critical",
+      "category": "party identification",
+      "original": "Employee Information:\nEmail: john.doe@email.com\nPhone: +91 9876543210\nAadhaar: 1234 5678 9012\nPAN: ABCDE1234F\nSSN: 123-45-6789",
+      "proposed": "Employee Information: Email: john.doe@email.com, Phone: +91 9876543210, Aadhaar: 1234 5678 9012, PAN: ABCDE1234F, SSN: 123-45-6789. The Company shall obtain explicit consent from the Employee for the collection and use of their personal data, including SSN and PAN, and shall specify the purpose for which the data is being collected.",
+      "reason": "To ensure compliance with data protection regulations and protect the Employee's sensitive personal data.",
+      "negotiationPosition": "Explicit consent and purpose for collecting SSN and PAN.",
+      "dependencyWarning": null,
+      "priority": "High"
+    },
+    {
+      "findingId": "liability_1",
+      "clauseId": "c3",
+      "title": "Limitation of Liability",
+      "severity": "Critical",
+      "category": "liability",
+      "original": "Limitation of Liability\nThe Company shall have no liability for any indirect, special, incidental, or consequential damages.",
+      "proposed": "Limitation of Liability\nThe Company shall have a liability cap of [MONEY_014] for direct damages.",
+      "reason": "To mitigate the risk of uncapped liability for direct damages.",
+      "negotiationPosition": "A liability cap of [MONEY_014] for direct damages.",
+      "dependencyWarning": null,
+      "priority": "High"
+    },
+    {
+      "findingId": "corporate_2",
+      "clauseId": "c1",
+      "title": "Employee Information",
+      "severity": "High",
+      "category": "party identification",
+      "original": "Employee Information:\nEmail: john.doe@email.com\nPhone: +91 9876543210\nAadhaar: 1234 5678 9012\nPAN: ABCDE1234F\nSSN: 123-45-6789",
+      "proposed": "The contracting entity is [CLIENT_NAME_001], a [JURISDICTION_002] company with [ACV_VALUE_003] in capital.",
+      "reason": "To clarify the contracting entity's identity and liability structure.",
+      "negotiationPosition": "The contracting entity is [CLIENT_NAME_001], a [JURISDICTION_002] company with [ACV_VALUE_003] in capital.",
+      "dependencyWarning": null,
+      "priority": "High"
+    },
+    {
+      "findingId": "liability_2",
+      "clauseId": "c3",
+      "title": "Limitation of Liability",
+      "severity": "High",
+      "category": "liability",
+      "original": "Limitation of Liability\nThe Company shall have no liability for any indirect, special, incidental, or consequential damages.",
+      "proposed": "Limitation of Liability\nThe Company shall have liability for indirect, special, incidental, and consequential damages, up to a maximum of [MONEY_014].",
+      "reason": "To include consequential damages in the liability scope.",
+      "negotiationPosition": "Liability for indirect, special, incidental, and consequential damages, up to a maximum of [MONEY_014].",
+      "dependencyWarning": null,
+      "priority": "Medium"
+    },
+    {
+      "findingId": "corporate_3",
+      "clauseId": "c4",
+      "title": "Governing Law",
+      "severity": "Medium",
+      "category": "governing law",
+      "original": "This Agreement shall be governed by the laws of California.",
+      "proposed": "This Agreement shall be governed by the laws of [JURISDICTION_002] and any disputes arising from this Agreement shall be resolved in the courts of [JURISDICTION_002].",
+      "reason": "To specify the jurisdiction for disputes.",
+      "negotiationPosition": "The jurisdiction for disputes is [JURISDICTION_002].",
+      "dependencyWarning": null,
+      "priority": "Medium"
+    },
+    {
+      "findingId": "financial_1",
+      "clauseId": "c6",
+      "title": "Payment",
+      "severity": "Low",
+      "category": "payment",
+      "original": "Payment via Credit Card 1234-5678-9012-3456 is accepted.",
+      "proposed": "Payment via Credit Card 1234-5678-9012-3456 is accepted. The Company shall specify the payment method in the contract.",
+      "reason": "To clarify the payment method.",
+      "negotiationPosition": "Specify the payment method in the contract.",
+      "dependencyWarning": null,
+      "priority": "Low"
+    },
+    {
+      "findingId": "privacy_1",
+      "clauseId": "c5",
+      "title": "Confidentiality Clause",
+      "severity": "Low",
+      "category": "confidentiality",
+      "original": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties.",
+      "proposed": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties or to the obligee.",
+      "reason": "To restrict disclosure of IP addresses to the obligee as well.",
+      "negotiationPosition": "Restrict disclosure of IP addresses to the obligee as well.",
+      "dependencyWarning": null,
+      "priority": "Low"
+    },
+    {
+      "findingId": "privacy_2",
+      "clauseId": "c5",
+      "title": "Confidentiality Clause",
+      "severity": "Low",
+      "category": "confidentiality",
+      "original": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties.",
+      "proposed": "The Employee agrees not to disclose IP addresses such as 192.168.1.1 to third parties or to the obligee, for a period of [TIME_PERIOD_008] from the date of this Agreement.",
+      "reason": "To specify the duration of the confidentiality obligation.",
+      "negotiationPosition": "Specify the duration of the confidentiality obligation.",
+      "dependencyWarning": null,
+      "priority": "Low"
+    }
+  ],
+  "email": "Contract Redlines and Negotiation Points\n\nDear [Counterparty's Commercial Contact],\n\nWe've reviewed the contract and identified several critical issues that require immediate attention. Our proposed redlines and negotiation points are attached below.\n\nHigh Priority Items:\n1. Liability cap for direct damages (Section 3, Limitation of Liability): We propose a liability cap of [MONEY_014] for direct damages.\n2. Explicit consent and purpose for collecting SSN and PAN (Section 1, Employee Information): We propose obtaining explicit consent from the Employee for the collection and use of their personal data, including SSN and PAN, and specifying the purpose for which the data is being collected.\n3. Contracting entity's identity and liability structure (Section 1, Employee Information): We propose clarifying the contracting entity's identity and liability structure.\n\nMedium Priority Items:\n1. Jurisdiction for disputes (Section 4, Governing Law): We propose specifying the jurisdiction for disputes as [JURISDICTION_002].\n2. Liability for indirect, special, incidental, and consequential damages (Section 3, Limitation of Liability): We propose including consequential damages in the liability scope.\n\nLow Priority Items:\n1. Payment method (Section 6, Payment): We propose specifying the payment method in the contract.\n2. Disclosure of IP addresses (Section 5, Confidentiality): We propose restricting disclosure of IP addresses to the obligee as well.\n3. Duration of confidentiality obligation (Section 5, Confidentiality): We propose specifying the duration of the confidentiality obligation.\n\nPlease let us know your thoughts on these proposed redlines and negotiation points. We look forward to discussing them further.\n\nBest regards,\n[Your Name]"
+}

@@ -23,30 +23,18 @@ export class PipelineTools {
 
   @Tool({
     name: 'run_full_pipeline',
-    description: 'Run the entire contract analysis pipeline in one go. You can provide raw text, or provide a fileBase64 string (PDF/Word) to parse natively.',
+    description: 'Run the entire contract analysis pipeline in one go. You must extract the text from the PDF first and pass the raw text.',
     inputSchema: z.object({
-      text: z.string().optional().describe('The raw extracted text of the contract. Use this if you already extracted the text.'),
-      fileBase64: z.string().optional().describe('Base64 encoded file content of a PDF or Word Doc. Use this if you want the server to parse the file directly.'),
-      filename: z.string().optional().describe('Original filename (required if using fileBase64, e.g. contract.pdf)'),
-      contractType: z.string().optional().default('general_contract').describe('Type of contract (e.g. nda, saas_msa, general_contract)'),
-      isBase64: z.boolean().optional().describe('Set to true if the text parameter is base64 encoded to bypass PII egress filters.')
+      text: z.string().describe('The raw extracted text of the contract. You MUST extract the text from the PDF using your python environment first, and pass the raw text string here. DO NOT pass base64 or file paths.'),
+      contractType: z.string().optional().default('general_contract').describe('Type of contract (e.g. nda, saas_msa, general_contract)')
     }),
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
   })
   async runFullPipeline(input: any, ctx: any) {
-    let { text, fileBase64, filename, contractType, isBase64 } = input;
+    let { text, contractType } = input;
     
-    if (fileBase64 && filename) {
-      ctx.logger.info('Parsing raw file directly', { filename });
-      const parseResult = await this.parserService.parse(fileBase64, filename);
-      text = parseResult.text;
-    } else if (text && isBase64) {
-      ctx.logger.info('Decoding base64 text payload');
-      text = Buffer.from(text, 'base64').toString('utf8');
-    }
-
     if (!text || !text.trim()) {
-      return { error: 'No text provided or extracted. Please provide text or a valid fileBase64.' };
+      return { error: 'No text provided. Please extract the text from the document and pass it as a string.' };
     }
 
     const sessionId = `sess_${Date.now()}`;
