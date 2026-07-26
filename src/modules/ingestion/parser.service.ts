@@ -16,8 +16,13 @@ const SCAN_SUSPICION_THRESHOLD = 100;
 
 @Injectable()
 export class ParserService {
-  async parse(base64: string, filename: string): Promise<ParseResult> {
-    const buffer = Buffer.from(base64, 'base64');
+  async parse(url: string, filename: string): Promise<ParseResult> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch document from URL: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     const lower = filename.toLowerCase();
 
     if (lower.endsWith('.pdf')) {
