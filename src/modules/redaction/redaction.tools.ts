@@ -42,7 +42,7 @@ export class RedactionTools {
   @Tool({
     name: 'redact_document',
     description:
-      'Redact a contract under the policy for the selected contract type. Accepts a URL to a file (preferred) or raw text. Returns the redacted text plus a session id.',
+      'Redact a contract under the policy for the selected contract type. Accepts a URL to a file (preferred) or raw text. Returns a structured JSON object (often stringified in the text field) containing the redacted text and a sessionId. YOU MUST parse this JSON to extract `sessionId` and `redactedText` to pass to build_graph.',
     inputSchema: z.object({
       url: z.string().optional().describe('URL to the uploaded PDF or Word document (if available)'),
       filename: z.string().optional().describe('Original filename (required if url is used)'),
