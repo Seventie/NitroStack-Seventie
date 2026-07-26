@@ -2,12 +2,14 @@ import { ToolDecorator as Tool, ExecutionContext, Injectable } from '@nitrostack
 import { z } from 'zod';
 import { ClassifierService } from './classifier.service.js';
 import { RedactionService } from './redaction.service.js';
+import { ParserService } from '../ingestion/parser.service.js';
 
-@Injectable({ deps: [ClassifierService, RedactionService] })
+@Injectable({ deps: [ClassifierService, RedactionService, ParserService] })
 export class RedactionTools {
   constructor(
     private classifierService: ClassifierService,
-    private redactionService: RedactionService
+    private redactionService: RedactionService,
+    private parserService: ParserService
   ) {}
 
   @Tool({
@@ -40,9 +42,11 @@ export class RedactionTools {
   @Tool({
     name: 'redact_document',
     description:
-      'Redact a contract under the policy for the selected contract type. Returns the redacted text plus a session id. Original values are held only in an encrypted in-memory store keyed by that session id and are never returned.',
+      'Redact a contract under the policy for the selected contract type. Accepts a URL to a file (preferred) or raw text. Returns the redacted text plus a session id.',
     inputSchema: z.object({
-      text: z.string().describe('Full text of the document. You MUST extract the text using your python environment first.'),
+      url: z.string().optional().describe('URL to the uploaded PDF or Word document (if available)'),
+      filename: z.string().optional().describe('Original filename (required if url is used)'),
+      text: z.string().optional().describe('Full text of the document (use this if url is not available)'),
       doctype: z
         .string()
         .describe(
@@ -53,8 +57,19 @@ export class RedactionTools {
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
   })
   async redactDocument(input: any, ctx: ExecutionContext) {
+    if (!input.url && !input.text) {
+      throw new Error('Must provide either url or text to redact the document.');
+    }
+
+    let documentText = input.text || '';
+    if (input.url && input.filename) {
+      ctx.logger.info('Parsing document from URL before redaction');
+      const parsed = await this.parserService.parse(input.url, input.filename);
+      documentText = parsed.text;
+    }
+
     ctx.logger.info('Redacting document', { doctype: input.doctype });
-    let text = input.text;
+    let text = documentText;
 
     const result = await this.redactionService.redact(text, input.doctype, input.sessionId);
     const verification = this.redactionService.verify(result.redactedText);
